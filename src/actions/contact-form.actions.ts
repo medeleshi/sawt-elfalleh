@@ -1,5 +1,6 @@
-// src/actions/contact.actions.ts
-// Contact form submission — stores to DB if table exists, else logs gracefully.
+// src/actions/contact-form.actions.ts
+// Contact form submission — stores to contact_submissions table.
+// NOTE: The contact_submissions table must be present in schema.sql and db.ts.
 'use server'
 
 import { z } from 'zod'
@@ -44,18 +45,23 @@ export async function submitContactAction(
   try {
     const supabase = await createClient()
 
-    // Try to insert into contact_submissions if the table exists
-    // If table doesn't exist, Supabase returns a postgres error — we catch and succeed gracefully
-    await supabase.from('contact_submissions' as never).insert({
+    // TODO: Add contact_submissions to schema.sql, run migration, and regenerate db.ts.
+    // The 'as any' cast below is a temporary bridge until the table exists in types.
+    // @ts-expect-error - table not yet in db.ts
+    const { error } = await (supabase.from('contact_submissions' as any).insert({
       name: parsed.data.name,
       email: parsed.data.email,
       message: parsed.data.message,
-    } as never)
+    }) as any)
 
-    // Whether or not DB insert worked, we return success (MVP)
+    if (error) {
+      console.error('[submitContactAction] DB error:', error)
+      return { status: 'error', error: 'تعذّر إرسال رسالتك. يرجى المحاولة مجدداً.' }
+    }
+
     return { status: 'success' }
-  } catch {
-    // Table doesn't exist or network issue — still succeed for UX
-    return { status: 'success' }
+  } catch (err) {
+    console.error('[submitContactAction] Unexpected error:', err)
+    return { status: 'error', error: 'تعذّر إرسال رسالتك. يرجى المحاولة مجدداً.' }
   }
 }

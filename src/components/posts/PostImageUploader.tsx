@@ -5,10 +5,10 @@ import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
 import {
   MAX_POST_IMAGES,
-  MAX_IMAGE_SIZE_BYTES,
-  ACCEPTED_IMAGE_TYPES,
   STORAGE_BUCKETS,
 } from '@/lib/utils/constants'
+import { validateImage, generateStoragePath, ALLOWED_MIME_TYPES } from '@/lib/utils/storage'
+import { v4 as uuidv4 } from 'uuid'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -67,12 +67,9 @@ export default function PostImageUploader({ initialImages = [], onChange }: Prop
 
     // Validate each file
     for (const file of toUpload) {
-      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-        setError('صيغة الصورة غير مدعومة. استخدم JPG أو PNG أو WebP')
-        return
-      }
-      if (file.size > MAX_IMAGE_SIZE_BYTES) {
-        setError(`حجم الصورة يجب أن لا يتجاوز 5 ميغابايت`)
+      const { valid, error } = validateImage(file)
+      if (!valid) {
+        setError(error || 'ملف غير صالح')
         return
       }
     }
@@ -83,8 +80,8 @@ export default function PostImageUploader({ initialImages = [], onChange }: Prop
       const uploaded: UploadedImage[] = []
 
       for (const file of toUpload) {
-        const ext  = file.name.split('.').pop() ?? 'jpg'
-        const path = `${uid()}-${Date.now()}.${ext}`
+        // We don't have the postId yet during creation, so we use a temp folder or just root of bucket
+        const path = generateStoragePath(file, { bucket: 'post-images' })
 
         const { error: uploadError } = await supabase.storage
           .from(STORAGE_BUCKETS.POST_IMAGES)
@@ -239,7 +236,7 @@ export default function PostImageUploader({ initialImages = [], onChange }: Prop
       <input
         ref={inputRef}
         type="file"
-        accept={ACCEPTED_IMAGE_TYPES.join(',')}
+        accept={ALLOWED_MIME_TYPES.join(',')}
         multiple
         className="hidden"
         onChange={(e) => {

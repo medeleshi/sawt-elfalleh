@@ -28,7 +28,7 @@ export default async function OnboardingProfilePage() {
   // Fetch current profile to pre-fill the form
   const { data: profile } = await (supabase
     .from('profiles')
-    .select('full_name, role, region_id, city, phone, bio')
+    .select('full_name, role, region_id, city, phone, bio, avatar_url')
     .eq('id', user.id)
     .single() as any)
 
@@ -42,6 +42,7 @@ export default async function OnboardingProfilePage() {
         city:      profile?.city ?? null,
         phone:     profile?.phone ?? null,
         bio:       profile?.bio ?? null,
+        avatar_url: profile?.avatar_url ?? null,
       }}
     />
   )

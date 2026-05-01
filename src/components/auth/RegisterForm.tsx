@@ -1,5 +1,7 @@
 'use client'
 
+import { useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { useFormState } from 'react-dom'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -13,13 +15,20 @@ import AuthAlert from '@/components/auth/AuthAlert'
 import FormField from '@/components/auth/FormField'
 import SubmitButton from '@/components/auth/SubmitButton'
 import GoogleOAuthButton from '@/components/auth/GoogleOAuthButton'
-import RoleSelector from '@/components/auth/RoleSelector'
 import type { ActionResult } from '@/types/domain'
 
 const initialState: ActionResult = { success: false, error: '' }
 
 export default function RegisterForm() {
   const [state, formAction] = useFormState(registerAction, initialState)
+  const router = useRouter()
+
+  useEffect(() => {
+    if (state.success && state.message === 'SUCCESS_REDIRECT') {
+      router.push(ROUTES.ONBOARDING_PROFILE)
+      router.refresh()
+    }
+  }, [state, router])
 
   const {
     register,
@@ -44,21 +53,6 @@ export default function RegisterForm() {
       )}
 
       <form action={formAction} className="space-y-4" noValidate>
-        {/* Role selection — controlled via Controller for react-hook-form + hidden input for FormData */}
-        <Controller
-          name="role"
-          control={control}
-          render={({ field }) => (
-            <>
-              <input type="hidden" name="role" value={field.value ?? ''} />
-              <RoleSelector
-                value={field.value ?? ''}
-                onChange={field.onChange}
-                error={errors.role?.message}
-              />
-            </>
-          )}
-        />
 
         <FormField
           {...register('email')}

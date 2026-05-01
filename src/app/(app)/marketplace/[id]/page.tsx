@@ -5,12 +5,13 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import type { Metadata } from 'next'
 
-import { getPostById, getSimilarPosts, getCurrentUserId } from '@/lib/queries/post-details.queries'
+import { getPostById, getSimilarPosts, getCurrentUserId, isPostSaved } from '@/lib/queries/post-details.queries'
 import { recordPostView } from '@/actions/analytics.actions'
 import { formatPrice, formatQuantity, formatRelativeTime, formatDate } from '@/lib/utils/format'
 
 import PostImageSlider from '@/components/posts/PostImageSlider'
 import PostContactSection from '@/components/posts/PostContactSection'
+import PostActions from '@/components/posts/PostActions'
 import SellerCard from '@/components/posts/SellerCard'
 import SimilarPosts from '@/components/posts/SimilarPosts'
 import ReportModal from '@/components/reports/ReportModal'
@@ -59,6 +60,8 @@ export default async function PostDetailsPage({
   ])
 
   if (!post) notFound()
+
+  const isSaved = await isPostSaved(post.id, currentUserId)
 
   const profile = (post as any).profiles
   const category = (post as any).category
@@ -210,6 +213,14 @@ export default async function PostDetailsPage({
             </div>
           )}
 
+          {/* Action Bar: Save, Share, Edit, Delete */}
+          <PostActions 
+            postId={post.id} 
+            isOwnPost={!!(currentUserId && (post as any).profiles?.id === currentUserId)}
+            initialIsSaved={isSaved}
+            title={post.title}
+          />
+
           {/* Contact section */}
           {!isExpired && profile && (
             <PostContactSection
@@ -226,12 +237,19 @@ export default async function PostDetailsPage({
             <SellerCard profile={profile} />
           )}
 
-          {/* Report section — hidden for post owner */}
-          {!isOwnPost && (
-            <div className="post-details__report">
-              <ReportModal
-                postId={post.id}
-                targetLabel={post.title}
+          {/* Report Button */}
+          {currentUserId && currentUserId !== profile?.id && (
+            <div className="mt-8 pt-8 border-t border-slate-100 flex justify-center">
+              <ReportModal 
+                postId={post.id} 
+                trigger={
+                  <button className="text-sm text-slate-400 hover:text-red-500 transition-colors flex items-center gap-1">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+                    </svg>
+                    إبلاغ عن هذا الإعلان
+                  </button>
+                }
               />
             </div>
           )}

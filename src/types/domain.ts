@@ -47,8 +47,8 @@ export type PublicProfile = Profile & {
 // ─── Server Action return types ───────────────────────────────────────────────
 
 export type ActionResult<T = undefined> =
-  | { success: true; data?: T }
-  | { success: false; error: string }
+  | { success: true; data?: T; message?: string }
+  | { success: false; error: string; message?: string }
 
 // ─── Re-export enums for convenience ─────────────────────────────────────────
 

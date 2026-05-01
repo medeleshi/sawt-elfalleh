@@ -13,24 +13,18 @@ export type ContactType = 'phone' | 'whatsapp'
 
 // ─── Database interface (Supabase client generic) ────────────────────────────
 
-export type Database = {
-  public: {
-    Tables: {
-      regions: {
-        Row: {
+export interface PublicRowTypes {
+  regions: {
+
           id: string
           name_ar: string
           name_fr: string | null
           code: string
           sort_order: number
           created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['regions']['Row'], 'id' | 'created_at'>
-        Update: Partial<Database['public']['Tables']['regions']['Insert']>
-      }
+          }
+  categories: {
 
-      categories: {
-        Row: {
           id: string
           name_ar: string
           name_fr: string | null
@@ -40,26 +34,18 @@ export type Database = {
           sort_order: number
           is_active: boolean
           created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['categories']['Row'], 'id' | 'created_at'>
-        Update: Partial<Database['public']['Tables']['categories']['Insert']>
-      }
+          }
+  units: {
 
-      units: {
-        Row: {
           id: string
           name_ar: string
           name_fr: string | null
           symbol: string
           sort_order: number
           created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['units']['Row'], 'id' | 'created_at'>
-        Update: Partial<Database['public']['Tables']['units']['Insert']>
-      }
+          }
+  profiles: {
 
-      profiles: {
-        Row: {
           id: string
           full_name: string
           username: string | null
@@ -74,34 +60,22 @@ export type Database = {
           created_at: string
           updated_at: string
           deleted_at: string | null
-        }
-        Insert: Omit<Database['public']['Tables']['profiles']['Row'], 'created_at' | 'updated_at'>
-        Update: Partial<Database['public']['Tables']['profiles']['Insert']>
-      }
+          }
+  user_activities: {
 
-      user_activities: {
-        Row: {
           id: string
           user_id: string
           category_id: string
-        }
-        Insert: Omit<Database['public']['Tables']['user_activities']['Row'], 'id'>
-        Update: never
-      }
+          }
+  user_followed_regions: {
 
-      user_followed_regions: {
-        Row: {
           id: string
           user_id: string
           region_id: string
           created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['user_followed_regions']['Row'], 'id' | 'created_at'>
-        Update: never
-      }
+          }
+  notification_settings: {
 
-      notification_settings: {
-        Row: {
           id: string
           user_id: string
           new_post_region: boolean
@@ -109,13 +83,9 @@ export type Database = {
           messages: boolean
           platform_updates: boolean
           updated_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['notification_settings']['Row'], 'id' | 'updated_at'>
-        Update: Partial<Database['public']['Tables']['notification_settings']['Insert']>
-      }
+          }
+  posts: {
 
-      posts: {
-        Row: {
           id: string
           user_id: string
           type: PostType
@@ -132,56 +102,166 @@ export type Database = {
           expires_at: string
           created_at: string
           updated_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['posts']['Row'], 'id' | 'created_at' | 'updated_at' | 'expires_at' | 'status'>
-        Update: Partial<Database['public']['Tables']['posts']['Insert']>
-      }
+          }
+  post_images: {
 
-      post_images: {
-        Row: {
           id: string
           post_id: string
           url: string
           storage_path: string
           sort_order: number
           created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['post_images']['Row'], 'id' | 'created_at'>
-        Update: Partial<Database['public']['Tables']['post_images']['Insert']>
-      }
+          }
+  post_views: {
 
-      post_views: {
-        Row: {
           id: string
           post_id: string
           viewer_id: string | null
           ip_hash: string | null
           created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['post_views']['Row'], 'id' | 'created_at'>
-        Update: never
-      }
+          }
+  post_contacts: {
 
-      post_contacts: {
-        Row: {
           id: string
           post_id: string
           requester_id: string | null
           contact_type: ContactType
           created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['post_contacts']['Row'], 'id' | 'created_at'>
-        Update: never
-      }
+          }
+  saved_posts: {
 
-      saved_posts: {
-        Row: {
           id: string
           user_id: string
           post_id: string
           created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['saved_posts']['Row'], 'id' | 'created_at'>
+          }
+  price_history: {
+
+          id: string
+          category_id: string
+          region_id: string | null
+          unit_id: string
+          min_price: number
+          max_price: number
+          recorded_at: string
+          }
+  admin_logs: {
+
+          id: string
+          admin_id: string
+          action: string
+          target_type: 'user' | 'post' | 'report' | 'category' | 'unit' | null
+          target_id: string | null
+          details: Record<string, unknown>
+          created_at: string
+          }
+  static_pages: {
+
+          id: string
+          slug: string
+          title_ar: string
+          content_ar: string | null
+          updated_at: string
+          }
+}
+
+export interface PublicRowTypes {
+  reports: {
+
+          id: string
+          reporter_id: string
+          post_id: string | null
+          reported_user_id: string | null
+          reason: string
+          status: ReportStatus
+          admin_note: string | null
+          created_at: string
+          }
+  notifications: {
+
+          id: string
+          user_id: string
+          type: string
+          title: string | null
+          body: string | null
+          data: Record<string, unknown>
+          is_read: boolean
+          created_at: string
+          }
+}
+
+export type Database = {
+  public: {
+    Tables: {
+      regions: {
+        Row: PublicRowTypes['regions']
+        Insert: Omit<PublicRowTypes['regions'], 'id' | 'created_at'>
+        Update: Partial<Omit<PublicRowTypes['regions'], 'id' | 'created_at'>>
+      }
+
+      categories: {
+        Row: PublicRowTypes['categories']
+        Insert: Omit<PublicRowTypes['categories'], 'id' | 'created_at'>
+        Update: Partial<Omit<PublicRowTypes['categories'], 'id' | 'created_at'>>
+      }
+
+      units: {
+        Row: PublicRowTypes['units']
+        Insert: Omit<PublicRowTypes['units'], 'id' | 'created_at'>
+        Update: Partial<Omit<PublicRowTypes['units'], 'id' | 'created_at'>>
+      }
+
+      profiles: {
+        Row: PublicRowTypes['profiles']
+        Insert: Omit<PublicRowTypes['profiles'], 'created_at' | 'updated_at'>
+        Update: Partial<Omit<PublicRowTypes['profiles'], 'created_at' | 'updated_at'>>
+      }
+
+      user_activities: {
+        Row: PublicRowTypes['user_activities']
+        Insert: Omit<PublicRowTypes['user_activities'], 'id'>
+        Update: never
+      }
+
+      user_followed_regions: {
+        Row: PublicRowTypes['user_followed_regions']
+        Insert: Omit<PublicRowTypes['user_followed_regions'], 'id' | 'created_at'>
+        Update: never
+      }
+
+      notification_settings: {
+        Row: PublicRowTypes['notification_settings']
+        Insert: Omit<PublicRowTypes['notification_settings'], 'id' | 'updated_at'>
+        Update: Partial<Omit<PublicRowTypes['notification_settings'], 'id' | 'updated_at'>>
+      }
+
+      posts: {
+        Row: PublicRowTypes['posts']
+        Insert: Omit<PublicRowTypes['posts'], 'id' | 'created_at' | 'updated_at' | 'expires_at' | 'status'>
+        Update: Partial<Omit<PublicRowTypes['posts'], 'id' | 'created_at' | 'updated_at' | 'expires_at' | 'status'>>
+      }
+
+      post_images: {
+        Row: PublicRowTypes['post_images']
+        Insert: Omit<PublicRowTypes['post_images'], 'id' | 'created_at'>
+        Update: Partial<Omit<PublicRowTypes['post_images'], 'id' | 'created_at'>>
+      }
+
+      post_views: {
+        Row: PublicRowTypes['post_views']
+        Insert: Omit<PublicRowTypes['post_views'], 'id' | 'created_at'>
+        Update: never
+      }
+
+      post_contacts: {
+        Row: PublicRowTypes['post_contacts']
+        Insert: Omit<PublicRowTypes['post_contacts'], 'id' | 'created_at'>
+        Update: never
+      }
+
+      saved_posts: {
+        Row: PublicRowTypes['saved_posts']
+        Insert: Omit<PublicRowTypes['saved_posts'], 'id' | 'created_at'>
         Update: never
       }
 
@@ -196,8 +276,8 @@ export type Database = {
           admin_note: string | null
           created_at: string
         }
-        Insert: Omit<Database['public']['Tables']['reports']['Row'], 'id' | 'created_at' | 'status'>
-        Update: Partial<Pick<Database['public']['Tables']['reports']['Row'], 'status' | 'admin_note'>>
+        Insert: Omit<PublicRowTypes['reports'], 'id' | 'created_at' | 'status'>
+        Update: Partial<Pick<PublicRowTypes['reports'], 'status' | 'admin_note'>>
       }
 
       notifications: {
@@ -211,48 +291,26 @@ export type Database = {
           is_read: boolean
           created_at: string
         }
-        Insert: Omit<Database['public']['Tables']['notifications']['Row'], 'id' | 'created_at' | 'is_read'>
-        Update: Partial<Pick<Database['public']['Tables']['notifications']['Row'], 'is_read'>>
+        Insert: Omit<PublicRowTypes['notifications'], 'id' | 'created_at' | 'is_read'>
+        Update: Partial<Pick<PublicRowTypes['notifications'], 'is_read'>>
       }
 
       price_history: {
-        Row: {
-          id: string
-          category_id: string
-          region_id: string | null
-          unit_id: string
-          min_price: number
-          max_price: number
-          recorded_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['price_history']['Row'], 'id' | 'recorded_at'>
+        Row: PublicRowTypes['price_history']
+        Insert: Omit<PublicRowTypes['price_history'], 'id' | 'recorded_at'>
         Update: never
       }
 
       admin_logs: {
-        Row: {
-          id: string
-          admin_id: string
-          action: string
-          target_type: 'user' | 'post' | 'report' | 'category' | 'unit' | null
-          target_id: string | null
-          details: Record<string, unknown>
-          created_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['admin_logs']['Row'], 'id' | 'created_at'>
+        Row: PublicRowTypes['admin_logs']
+        Insert: Omit<PublicRowTypes['admin_logs'], 'id' | 'created_at'>
         Update: never
       }
 
       static_pages: {
-        Row: {
-          id: string
-          slug: string
-          title_ar: string
-          content_ar: string | null
-          updated_at: string
-        }
-        Insert: Omit<Database['public']['Tables']['static_pages']['Row'], 'id' | 'updated_at'>
-        Update: Partial<Database['public']['Tables']['static_pages']['Insert']>
+        Row: PublicRowTypes['static_pages']
+        Insert: Omit<PublicRowTypes['static_pages'], 'id' | 'updated_at'>
+        Update: Partial<Omit<PublicRowTypes['static_pages'], 'id' | 'updated_at'>>
       }
     }
     Enums: {

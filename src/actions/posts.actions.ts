@@ -58,17 +58,17 @@ export async function createPostAction(
 
   // Parse raw fields
   const raw = {
-    type:          formData.get('type'),
-    category_id:   formData.get('category_id'),
-    title:         formData.get('title') ?? '',
-    description:   formData.get('description') ?? '',
-    quantity:      formData.get('quantity'),
-    unit_id:       formData.get('unit_id'),
-    price:         formData.get('price'),
+    type: formData.get('type'),
+    category_id: formData.get('category_id'),
+    title: formData.get('title') ?? '',
+    description: formData.get('description') ?? '',
+    quantity: formData.get('quantity'),
+    unit_id: formData.get('unit_id'),
+    price: formData.get('price'),
     is_negotiable: formData.get('is_negotiable') === 'true',
-    region_id:     formData.get('region_id'),
-    city:          formData.get('city') ?? '',
-    images:        formData.get('images') ?? '',
+    region_id: formData.get('region_id'),
+    city: formData.get('city') ?? '',
+    images: formData.get('images') ?? '',
   }
 
   const parsed = postSchema.safeParse(raw)
@@ -90,18 +90,18 @@ export async function createPostAction(
   // Insert post
   const { data: post, error: postError } = await ((supabase.from('posts') as any)
     .insert({
-      user_id:       user.id,
-      type:          data.type,
-      category_id:   data.category_id,
-      title:         data.title,
-      description:   data.description || null,
-      quantity:      data.quantity,
-      unit_id:       data.unit_id,
-      price:         data.price,
+      user_id: user.id,
+      type: data.type,
+      category_id: data.category_id,
+      title: data.title,
+      description: data.description || null,
+      quantity: data.quantity,
+      unit_id: data.unit_id,
+      price: data.price,
       is_negotiable: data.is_negotiable,
-      region_id:     data.region_id,
-      city:          data.city || null,
-      expires_at:    expiresAt.toISOString(),
+      region_id: data.region_id,
+      city: data.city || null,
+      expires_at: expiresAt.toISOString(),
     })
     .select('id')
     .single() as any)
@@ -114,10 +114,10 @@ export async function createPostAction(
   const images = parseImages(formData.get('images'))
   if (images.length > 0) {
     const imageRows = images.map((img: any, idx: number) => ({
-      post_id:      post.id,
-      url:          img.url,
+      post_id: post.id,
+      url: img.url,
       storage_path: img.storage_path,
-      sort_order:   idx,
+      sort_order: idx,
     }))
 
     const { error: imgError } = await (supabase
@@ -170,17 +170,17 @@ export async function updatePostAction(
 
   // Parse fields
   const raw = {
-    type:          formData.get('type'),
-    category_id:   formData.get('category_id'),
-    title:         formData.get('title') ?? '',
-    description:   formData.get('description') ?? '',
-    quantity:      formData.get('quantity'),
-    unit_id:       formData.get('unit_id'),
-    price:         formData.get('price'),
+    type: formData.get('type'),
+    category_id: formData.get('category_id'),
+    title: formData.get('title') ?? '',
+    description: formData.get('description') ?? '',
+    quantity: formData.get('quantity'),
+    unit_id: formData.get('unit_id'),
+    price: formData.get('price'),
     is_negotiable: formData.get('is_negotiable') === 'true',
-    region_id:     formData.get('region_id'),
-    city:          formData.get('city') ?? '',
-    images:        formData.get('images') ?? '',
+    region_id: formData.get('region_id'),
+    city: formData.get('city') ?? '',
+    images: formData.get('images') ?? '',
   }
 
   const parsed = postSchema.safeParse(raw)
@@ -197,16 +197,16 @@ export async function updatePostAction(
   // Update post
   const { error: updateError } = await ((supabase.from('posts') as any)
     .update({
-      type:          data.type,
-      category_id:   data.category_id,
-      title:         data.title,
-      description:   data.description || null,
-      quantity:      data.quantity,
-      unit_id:       data.unit_id,
-      price:         data.price,
+      type: data.type,
+      category_id: data.category_id,
+      title: data.title,
+      description: data.description || null,
+      quantity: data.quantity,
+      unit_id: data.unit_id,
+      price: data.price,
       is_negotiable: data.is_negotiable,
-      region_id:     data.region_id,
-      city:          data.city || null,
+      region_id: data.region_id,
+      city: data.city || null,
     })
     .eq('id', postId)
     .eq('user_id', user.id) as any) // double-check ownership at DB level
@@ -223,10 +223,10 @@ export async function updatePostAction(
 
   if (images.length > 0) {
     const imageRows = images.map((img: any, idx: number) => ({
-      post_id:      postId,
-      url:          img.url,
+      post_id: postId,
+      url: img.url,
       storage_path: img.storage_path,
-      sort_order:   idx,
+      sort_order: idx,
     }))
 
     const { error: imgError } = await (supabase
@@ -263,6 +263,21 @@ export async function deletePostAction(postId: string): Promise<ActionResult> {
 
   if (error) {
     return { success: false, error: 'حدث خطأ أثناء حذف الإعلان' }
+  }
+
+  // Soft delete is done, now optionally cleanup storage if we want to be strict.
+  // For MVP, we usually keep them or handle via a background cron.
+  // But per requirements, let's implement the cleanup of images.
+  const { data: images } = await supabase
+    .from('post_images')
+    .select('storage_path')
+    .eq('post_id', postId)
+
+  if (images && images.length > 0) {
+    const paths = (images as any[]).map(img => img.storage_path).filter(Boolean) as string[]
+    if (paths.length > 0) {
+      await supabase.storage.from('post-images').remove(paths)
+    }
   }
 
   revalidatePath(ROUTES.HOME)
@@ -306,4 +321,46 @@ export async function getPostForEdit(postId: string) {
     .single()
 
   return data ?? null
+}
+
+// ─── Save / Unsave Post ───────────────────────────────────────────────────────
+
+export async function toggleSavePostAction(postId: string): Promise<ActionResult<{ isSaved: boolean }>> {
+  const { supabase, user } = await getAuthedProfile()
+
+  if (!user) {
+    return { success: false, error: 'يجب تسجيل الدخول أولاً' }
+  }
+
+  // Check if already saved
+  const { data: existing } = await supabase
+    .from('saved_posts')
+    .select('id')
+    .eq('user_id', user.id)
+    .eq('post_id', postId)
+    .single()
+
+  if (existing) {
+    // Unsave
+    const { error } = await supabase
+      .from('saved_posts')
+      .delete()
+      .eq('user_id', user.id)
+      .eq('post_id', postId)
+
+    if (error) return { success: false, error: 'حدث خطأ أثناء إلغاء الحفظ' }
+
+    revalidatePath(ROUTES.PROFILE_ME)
+    return { success: true, data: { isSaved: false } }
+  } else {
+    // Save
+    const { error } = await (supabase
+      .from('saved_posts') as any)
+      .insert({ user_id: user.id, post_id: postId })
+
+    if (error) return { success: false, error: 'حدث خطأ أثناء حفظ الإعلان' }
+
+    revalidatePath(ROUTES.PROFILE_ME)
+    return { success: true, data: { isSaved: true } }
+  }
 }

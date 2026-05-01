@@ -38,7 +38,8 @@ export async function getMarketplacePosts(filters: MarketplaceFilters): Promise<
       `,
       { count: 'exact' }
     )
-    .eq('status', 'active');
+    .eq('status', 'active')
+    .gt('expires_at', new Date().toISOString());
 
   // ── Apply filters ──
   if (filters.query?.trim()) {
@@ -50,11 +51,21 @@ export async function getMarketplacePosts(filters: MarketplaceFilters): Promise<
   }
 
   if (filters.category_id) {
-    query = query.eq('category_id', filters.category_id);
+    const ids = filters.category_id.split(',').filter(Boolean)
+    if (ids.length > 1) {
+      query = query.in('category_id', ids)
+    } else {
+      query = query.eq('category_id', ids[0])
+    }
   }
 
   if (filters.region_id) {
-    query = query.eq('region_id', filters.region_id);
+    const ids = filters.region_id.split(',').filter(Boolean)
+    if (ids.length > 1) {
+      query = query.in('region_id', ids)
+    } else {
+      query = query.eq('region_id', ids[0])
+    }
   }
 
   if (filters.unit_id) {

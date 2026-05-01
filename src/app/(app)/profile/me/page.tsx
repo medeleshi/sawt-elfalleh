@@ -9,7 +9,7 @@ import {
   getUserPostStats,
 } from '@/lib/queries/profile.queries'
 import MyProfileTabs from '@/components/profile/MyProfileTabs'
-import { Settings, Edit } from 'lucide-react'
+import { Settings, Edit, MapPin, Calendar } from 'lucide-react'
 
 export const metadata = {
   title: 'ملفي الشخصي — صوت الفلاح',
@@ -22,7 +22,22 @@ const ROLE_LABEL: Record<string, string> = {
   admin: 'مدير',
 }
 
-export default async function MyProfilePage() {
+const ROLE_COLOR: Record<string, string> = {
+  farmer: 'bg-green-100 text-green-800',
+  trader: 'bg-amber-100 text-amber-800',
+  citizen: 'bg-blue-100 text-blue-800',
+  admin: 'bg-red-100 text-red-800',
+}
+
+interface PageProps {
+  searchParams: Promise<{ page?: string; saved_page?: string }>
+}
+
+export default async function MyProfilePage({ searchParams }: PageProps) {
+  const params = await searchParams
+  const page = parseInt(params.page || '1', 10)
+  const savedPage = parseInt(params.saved_page || '1', 10)
+
   const supabase = await createClient()
   const {
     data: { user },
@@ -30,12 +45,12 @@ export default async function MyProfilePage() {
 
   if (!user) redirect('/login')
 
-  const [profile, posts, savedPosts, stats] = (await Promise.all([
+  const [profile, { posts, pagination: postsPagination }, { savedPosts, pagination: savedPagination }, stats] = (await Promise.all([
     getMyProfile(user.id),
-    getUserPosts(user.id),
-    getMySavedPosts(user.id),
+    getUserPosts(user.id, page),
+    getMySavedPosts(user.id, savedPage),
     getUserPostStats(user.id),
-  ])) as [any, any[], any[], any]
+  ])) as [any, any, any, any]
 
   if (!profile) redirect('/login')
 
@@ -70,7 +85,9 @@ export default async function MyProfilePage() {
                 <h1 className="text-2xl font-bold text-stone-900">
                   {profile.full_name}
                 </h1>
-                <span className="text-xs font-medium px-2 py-1 rounded-full bg-green-100 text-green-800">
+                <span
+                  className={`text-xs font-medium px-2 py-1 rounded-full ${ROLE_COLOR[profile.role] ?? 'bg-stone-100 text-stone-700'}`}
+                >
                   {ROLE_LABEL[profile.role] ?? profile.role}
                 </span>
               </div>
@@ -81,42 +98,24 @@ export default async function MyProfilePage() {
                 </p>
               )}
 
-              {profile.username && (
-                <p className="text-stone-400 text-sm mb-2">
-                  @{profile.username}
-                </p>
-              )}
-
-              {(profile.regions as { name_ar: string } | null)?.name_ar && (
-                <p className="text-stone-500 text-sm">
-                  📍{' '}
-                  {(profile.regions as { name_ar: string }).name_ar}
-                  {profile.city && `، ${profile.city}`}
-                </p>
-              )}
-            </div>
-
-            {/* Stats + Actions */}
-            <div className="flex flex-col items-center gap-3 shrink-0">
-              <div className="flex gap-3">
-                <div className="bg-stone-50 rounded-xl px-4 py-3 text-center">
-                  <div className="text-2xl font-bold text-stone-900">
-                    {stats.total}
-                  </div>
-                  <div className="text-xs text-stone-500">المنشورات</div>
-                </div>
-                <div className="bg-green-50 rounded-xl px-4 py-3 text-center">
-                  <div className="text-2xl font-bold text-green-700">
-                    {stats.active}
-                  </div>
-                  <div className="text-xs text-green-600">نشط</div>
-                </div>
+              <div className="flex flex-wrap justify-center sm:justify-start gap-4 text-sm text-stone-500 mb-4">
+                {(profile.regions as { name_ar: string } | null)?.name_ar && (
+                  <span className="flex items-center gap-1">
+                    <MapPin className="w-4 h-4" />
+                    {(profile.regions as { name_ar: string }).name_ar}
+                    {profile.city && `، ${profile.city}`}
+                  </span>
+                )}
+                <span className="flex items-center gap-1">
+                  <Calendar className="w-4 h-4" />
+                  عضو منذ {new Date(profile.created_at).getFullYear()}
+                </span>
               </div>
 
-              <div className="flex gap-2 w-full">
+              <div className="flex gap-2 justify-center sm:justify-start">
                 <Link
                   href="/settings/profile"
-                  className="flex-1 flex items-center justify-center gap-1.5 bg-green-600 text-white text-sm rounded-lg px-3 py-2 hover:bg-green-700 transition-colors"
+                  className="flex items-center justify-center gap-1.5 bg-green-600 text-white text-sm rounded-lg px-4 py-2 hover:bg-green-700 transition-colors"
                 >
                   <Edit className="w-4 h-4" />
                   تعديل الملف
@@ -129,13 +128,35 @@ export default async function MyProfilePage() {
                 </Link>
               </div>
             </div>
+
+            {/* Stats */}
+            <div className="flex sm:flex-col gap-4 sm:gap-2 text-center shrink-0">
+              <div className="bg-stone-50 rounded-xl px-4 py-3">
+                <div className="text-2xl font-bold text-stone-900">
+                  {stats.total}
+                </div>
+                <div className="text-xs text-stone-500">إجمالي المنشورات</div>
+              </div>
+              <div className="bg-green-50 rounded-xl px-4 py-3">
+                <div className="text-2xl font-bold text-green-700">
+                  {stats.active}
+                </div>
+                <div className="text-xs text-green-600">منشور نشط</div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Tabs: My Posts + Saved Posts */}
+      {/* Tabs */}
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <MyProfileTabs posts={posts} savedPosts={savedPosts} />
+        <MyProfileTabs 
+          posts={posts} 
+          savedPosts={savedPosts} 
+          postsPagination={postsPagination}
+          savedPagination={savedPagination}
+          isOwnProfile={true}
+        />
       </div>
     </div>
   )

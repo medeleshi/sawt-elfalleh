@@ -50,6 +50,8 @@ export const onboardingProfileSchema = z.object({
     .trim()
     .optional()
     .or(z.literal('')),
+    
+  avatar: z.any().optional(),
 })
 
 export type OnboardingProfileInput = z.infer<typeof onboardingProfileSchema>

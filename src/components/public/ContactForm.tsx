@@ -1,13 +1,34 @@
 // src/components/public/ContactForm.tsx
 'use client'
 
-import { useActionState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
+import { useFormState, useFormStatus } from 'react-dom'
 import { submitContactAction, type ContactFormState } from '@/actions/contact-form.actions'
 
 const INITIAL_STATE: ContactFormState = { status: 'idle' }
 
+function SubmitButton() {
+  const { pending } = useFormStatus()
+  return (
+    <button
+      type="submit"
+      className="contact-form__submit"
+      disabled={pending}
+    >
+      {pending ? (
+        <>
+          <span className="contact-form__spinner" aria-hidden />
+          جاري الإرسال...
+        </>
+      ) : (
+        'إرسال الرسالة'
+      )}
+    </button>
+  )
+}
+
 export default function ContactForm() {
-  const [state, action, isPending] = useActionState(submitContactAction, INITIAL_STATE)
+  const [state, formAction] = useFormState(submitContactAction, INITIAL_STATE)
   const formRef = useRef<HTMLFormElement>(null)
 
   // Reset form on success
@@ -20,7 +41,7 @@ export default function ContactForm() {
   const fields = state.status === 'validation' ? state.fields : {}
 
   return (
-    <form ref={formRef} action={action} className="contact-form" noValidate dir="rtl">
+    <form ref={formRef} action={formAction} className="contact-form" noValidate dir="rtl">
       {/* Success banner */}
       {state.status === 'success' && (
         <div className="contact-form__success" role="alert">
@@ -49,7 +70,6 @@ export default function ContactForm() {
           autoComplete="name"
           placeholder="محمد بن علي"
           className={`contact-form__input ${fields.name ? 'contact-form__input--error' : ''}`}
-          disabled={isPending}
           aria-describedby={fields.name ? 'cf-name-err' : undefined}
         />
         {fields.name && (
@@ -69,7 +89,6 @@ export default function ContactForm() {
           autoComplete="email"
           placeholder="example@email.com"
           className={`contact-form__input ${fields.email ? 'contact-form__input--error' : ''}`}
-          disabled={isPending}
           aria-describedby={fields.email ? 'cf-email-err' : undefined}
           dir="ltr"
         />
@@ -89,7 +108,6 @@ export default function ContactForm() {
           rows={5}
           placeholder="اكتب رسالتك هنا..."
           className={`contact-form__input contact-form__textarea ${fields.message ? 'contact-form__input--error' : ''}`}
-          disabled={isPending}
           aria-describedby={fields.message ? 'cf-msg-err' : undefined}
         />
         {fields.message && (
@@ -97,20 +115,7 @@ export default function ContactForm() {
         )}
       </div>
 
-      <button
-        type="submit"
-        className="contact-form__submit"
-        disabled={isPending}
-      >
-        {isPending ? (
-          <>
-            <span className="contact-form__spinner" aria-hidden />
-            جاري الإرسال...
-          </>
-        ) : (
-          'إرسال الرسالة'
-        )}
-      </button>
+      <SubmitButton />
     </form>
   )
 }

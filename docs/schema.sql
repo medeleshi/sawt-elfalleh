@@ -282,18 +282,15 @@ create trigger trg_posts_updated_at
 create or replace function handle_new_user()
 returns trigger as $$
 begin
-  insert into public.profiles (id, full_name, avatar_url, role)
+  insert into profiles (id, full_name, avatar_url)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', ''),
-    new.raw_user_meta_data->>'avatar_url',
-    'farmer'
-  )
-  on conflict (id) do nothing;
+    new.raw_user_meta_data->>'avatar_url'
+  );
 
-  insert into public.notification_settings (user_id)
-  values (new.id)
-  on conflict (user_id) do nothing;
+  insert into notification_settings (user_id)
+  values (new.id);
 
   return new;
 end;

@@ -32,10 +32,6 @@ export type LoginInput = z.infer<typeof loginSchema>
 export const registerSchema = z.object({
   email: emailField,
   password: passwordField,
-  role: z.enum(['farmer', 'trader', 'citizen'], {
-    required_error: 'يجب اختيار نوع الحساب',
-    invalid_type_error: 'نوع الحساب غير صالح',
-  }),
   terms: z.literal(true, {
     errorMap: () => ({ message: 'يجب الموافقة على شروط الاستخدام' }),
   }),

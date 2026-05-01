@@ -110,3 +110,16 @@ export async function getCurrentUserId(): Promise<string | null> {
   const { data: { user } } = await supabase.auth.getUser()
   return user?.id ?? null
 }
+
+export async function isPostSaved(postId: string, userId: string | null): Promise<boolean> {
+  if (!userId) return false
+  const supabase = await createClient()
+  const { data } = await supabase
+    .from('saved_posts')
+    .select('id')
+    .eq('post_id', postId)
+    .eq('user_id', userId)
+    .single()
+  
+  return !!data
+}

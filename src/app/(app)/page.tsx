@@ -3,11 +3,8 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { ROUTES } from '@/lib/utils/constants'
 import {
+  getUnifiedHomeFeed,
   getUserContext,
-  getMyRegionPosts,
-  getActivityPosts,
-  getLatestPosts,
-  getFollowedRegionPosts,
 } from '@/lib/queries/home.queries'
 import HomeBanner from '@/components/app/HomeBanner'
 import HomeSection from '@/components/posts/HomeSection'
@@ -35,21 +32,15 @@ export default async function HomePage() {
 
   if (!user) redirect(ROUTES.LOGIN)
 
-  // ── Step 1: user context (region, activities, followed regions) ────────────
-  const ctx = await getUserContext(user.id)
+  // ── Unified Step: Fetch all sections with deduplication ───────────────────
+  const { 
+    regionPosts, 
+    activityPosts, 
+    latestPosts, 
+    followedRegionPosts 
+  } = await getUnifiedHomeFeed(user.id)
 
-  // ── Step 2: all 4 section queries in parallel ──────────────────────────────
-  const [
-    myRegionPosts,
-    activityPosts,
-    latestPosts,
-    followedRegionPosts,
-  ] = await Promise.all([
-    getMyRegionPosts(ctx.regionId),
-    getActivityPosts(ctx.activityCategoryIds),
-    getLatestPosts(),
-    getFollowedRegionPosts(ctx.followedRegionIds),
-  ])
+  const ctx = await getUserContext(user.id)
 
   // ── Marketplace "View More" hrefs with context-aware filters ──────────────
   const myRegionHref = ctx.regionId
@@ -58,14 +49,14 @@ export default async function HomePage() {
 
   const activityHref =
     ctx.activityCategoryIds.length > 0
-      ? `${ROUTES.MARKETPLACE}?category_id=${ctx.activityCategoryIds[0]}`
+      ? `${ROUTES.MARKETPLACE}?category_id=${ctx.activityCategoryIds.join(',')}`
       : ROUTES.MARKETPLACE
 
   const latestHref = `${ROUTES.MARKETPLACE}?sort=newest`
 
   const followedHref =
     ctx.followedRegionIds.length > 0
-      ? `${ROUTES.MARKETPLACE}?region_id=${ctx.followedRegionIds[0]}`
+      ? `${ROUTES.MARKETPLACE}?region_id=${ctx.followedRegionIds.join(',')}`
       : ROUTES.MARKETPLACE
 
   // ── Fetch role for HomeBanner CTA label ──────────────────────────────────
@@ -88,7 +79,7 @@ export default async function HomePage() {
         {/* Section 1: My region */}
         <HomeSection
           title="منشورات من ولايتك"
-          posts={myRegionPosts}
+          posts={regionPosts}
           viewMoreHref={myRegionHref}
           emptyTitle="لا توجد منشورات في ولايتك بعد"
           emptyDescription="كن أول من ينشر في منطقتك أو تصفح السوق الكامل"

@@ -31,19 +31,28 @@ export type NotificationsResult = {
  */
 export async function getNotifications(
   userId: string,
-  page: number = 1
+  page: number = 1,
+  filter: 'all' | 'unread' | 'read' = 'all'
 ): Promise<NotificationsResult> {
   const supabase = await createClient()
   const limit = NOTIFICATIONS_PAGE_SIZE
   const offset = (page - 1) * limit
 
   // Fetch paginated notifications
-  const { data, error, count } = await supabase
+  let query = supabase
     .from('notifications')
     .select('id, user_id, type, title, body, data, is_read, created_at', {
       count: 'exact',
     })
     .eq('user_id', userId)
+
+  if (filter === 'unread') {
+    query = query.eq('is_read', false)
+  } else if (filter === 'read') {
+    query = query.eq('is_read', true)
+  }
+
+  const { data, error, count } = await query
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1)
 

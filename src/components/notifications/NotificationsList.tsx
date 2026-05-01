@@ -14,15 +14,22 @@ import type { NotificationRow } from '@/lib/queries/notifications.queries'
 
 interface Props {
   notifications: NotificationRow[]
+  filter: 'all' | 'unread' | 'read'
 }
 
-export default function NotificationsList({ notifications }: Props) {
+export default function NotificationsList({ notifications, filter }: Props) {
   if (notifications.length === 0) {
+    const emptyMessages = {
+      all: 'ستظهر هنا إشعاراتك عند وجود منشورات جديدة في ولايتك أو نشاطك',
+      unread: 'ليس لديك أي إشعارات غير مقروءة حالياً',
+      read: 'لم تقم بقراءة أي إشعارات بعد',
+    }
+
     return (
       <EmptyState
-        icon="🔔"
-        title="لا توجد إشعارات"
-        description="ستظهر هنا إشعاراتك عند وجود منشورات جديدة في ولايتك أو نشاطك"
+        icon={filter === 'unread' ? '✅' : '🔔'}
+        title={filter === 'unread' ? 'أنت متابع لكل شيء!' : 'لا توجد إشعارات'}
+        description={emptyMessages[filter]}
       />
     )
   }

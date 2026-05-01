@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import type { ActionResult } from '@/types/domain'
+import { logAdminAction } from '@/lib/actions/admin-logs'
 
 // ─── Admin guard ──────────────────────────────────────────────────────────────
 
@@ -12,7 +13,7 @@ async function getAdminClient() {
   const {
     data: { user },
   } = await supabase.auth.getUser()
-  if (!user) return { supabase: null }
+  if (!user) return { supabase: null, adminId: null }
 
   const { data: profile } = await (supabase
     .from('profiles')
@@ -20,8 +21,8 @@ async function getAdminClient() {
     .eq('id', user.id)
     .single() as any)
 
-  if (profile?.role !== 'admin') return { supabase: null }
-  return { supabase: supabase as any }
+  if (profile?.role !== 'admin') return { supabase: null, adminId: null }
+  return { supabase: supabase as any, adminId: user.id }
 }
 
 // ─── Category Actions ─────────────────────────────────────────────────────────
@@ -42,19 +43,21 @@ const categorySchema = z.object({
 export async function createCategoryAction(
   input: z.infer<typeof categorySchema>
 ): Promise<ActionResult> {
-  const { supabase } = await getAdminClient()
-  if (!supabase) return { success: false, error: 'غير مصرح لك' }
+  const { supabase, adminId } = await getAdminClient()
+  if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
   const parsed = categorySchema.safeParse(input)
   if (!parsed.success)
     return { success: false, error: parsed.error.errors[0].message }
 
-  const { error } = await supabase.from('categories').insert({
+  const { data, error } = await supabase.from('categories').insert({
     ...parsed.data,
     is_active: true,
-  })
+  }).select('id').single()
 
   if (error) return { success: false, error: error.message }
+
+  await logAdminAction(supabase, adminId, 'create_category', 'category', (data as any).id, parsed.data)
 
   revalidatePath('/admin/categories')
   return { success: true }
@@ -64,8 +67,8 @@ export async function updateCategoryAction(
   id: string,
   input: Partial<z.infer<typeof categorySchema>> & { is_active?: boolean }
 ): Promise<ActionResult> {
-  const { supabase } = await getAdminClient()
-  if (!supabase) return { success: false, error: 'غير مصرح لك' }
+  const { supabase, adminId } = await getAdminClient()
+  if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
   const { error } = await supabase
     .from('categories')
@@ -74,16 +77,20 @@ export async function updateCategoryAction(
 
   if (error) return { success: false, error: error.message }
 
+  await logAdminAction(supabase, adminId, 'update_category', 'category', id, input)
+
   revalidatePath('/admin/categories')
   return { success: true }
 }
 
 export async function deleteCategoryAction(id: string): Promise<ActionResult> {
-  const { supabase } = await getAdminClient()
-  if (!supabase) return { success: false, error: 'غير مصرح لك' }
+  const { supabase, adminId } = await getAdminClient()
+  if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
   const { error } = await supabase.from('categories').delete().eq('id', id)
   if (error) return { success: false, error: error.message }
+
+  await logAdminAction(supabase, adminId, 'delete_category', 'category', id)
 
   revalidatePath('/admin/categories')
   return { success: true }
@@ -101,15 +108,17 @@ const unitSchema = z.object({
 export async function createUnitAction(
   input: z.infer<typeof unitSchema>
 ): Promise<ActionResult> {
-  const { supabase } = await getAdminClient()
-  if (!supabase) return { success: false, error: 'غير مصرح لك' }
+  const { supabase, adminId } = await getAdminClient()
+  if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
   const parsed = unitSchema.safeParse(input)
   if (!parsed.success)
     return { success: false, error: parsed.error.errors[0].message }
 
-  const { error } = await supabase.from('units').insert(parsed.data)
+  const { data, error } = await supabase.from('units').insert(parsed.data).select('id').single()
   if (error) return { success: false, error: error.message }
+
+  await logAdminAction(supabase, adminId, 'create_unit', 'unit', (data as any).id, parsed.data)
 
   revalidatePath('/admin/categories')
   return { success: true }
@@ -119,22 +128,26 @@ export async function updateUnitAction(
   id: string,
   input: Partial<z.infer<typeof unitSchema>>
 ): Promise<ActionResult> {
-  const { supabase } = await getAdminClient()
-  if (!supabase) return { success: false, error: 'غير مصرح لك' }
+  const { supabase, adminId } = await getAdminClient()
+  if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
   const { error } = await supabase.from('units').update(input).eq('id', id)
   if (error) return { success: false, error: error.message }
+
+  await logAdminAction(supabase, adminId, 'update_unit', 'unit', id, input)
 
   revalidatePath('/admin/categories')
   return { success: true }
 }
 
 export async function deleteUnitAction(id: string): Promise<ActionResult> {
-  const { supabase } = await getAdminClient()
-  if (!supabase) return { success: false, error: 'غير مصرح لك' }
+  const { supabase, adminId } = await getAdminClient()
+  if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
   const { error } = await supabase.from('units').delete().eq('id', id)
   if (error) return { success: false, error: error.message }
+
+  await logAdminAction(supabase, adminId, 'delete_unit', 'unit', id)
 
   revalidatePath('/admin/categories')
   return { success: true }
@@ -156,15 +169,17 @@ const regionSchema = z.object({
 export async function createRegionAction(
   input: z.infer<typeof regionSchema>
 ): Promise<ActionResult> {
-  const { supabase } = await getAdminClient()
-  if (!supabase) return { success: false, error: 'غير مصرح لك' }
+  const { supabase, adminId } = await getAdminClient()
+  if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
   const parsed = regionSchema.safeParse(input)
   if (!parsed.success)
     return { success: false, error: parsed.error.errors[0].message }
 
-  const { error } = await supabase.from('regions').insert(parsed.data)
+  const { data, error } = await supabase.from('regions').insert(parsed.data).select('id').single()
   if (error) return { success: false, error: error.message }
+
+  await logAdminAction(supabase, adminId, 'create_region', null, (data as any).id, parsed.data)
 
   revalidatePath('/admin/categories')
   return { success: true }
@@ -174,11 +189,13 @@ export async function updateRegionAction(
   id: string,
   input: Partial<z.infer<typeof regionSchema>>
 ): Promise<ActionResult> {
-  const { supabase } = await getAdminClient()
-  if (!supabase) return { success: false, error: 'غير مصرح لك' }
+  const { supabase, adminId } = await getAdminClient()
+  if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
   const { error } = await supabase.from('regions').update(input).eq('id', id)
   if (error) return { success: false, error: error.message }
+
+  await logAdminAction(supabase, adminId, 'update_region', null, id, input)
 
   revalidatePath('/admin/categories')
   return { success: true }
@@ -187,8 +204,8 @@ export async function updateRegionAction(
 // ─── User Admin Actions ───────────────────────────────────────────────────────
 
 export async function suspendUserAction(userId: string): Promise<ActionResult> {
-  const { supabase } = await getAdminClient()
-  if (!supabase) return { success: false, error: 'غير مصرح لك' }
+  const { supabase, adminId } = await getAdminClient()
+  if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
   // Soft-delete by setting deleted_at
   const { error } = await supabase
@@ -198,13 +215,15 @@ export async function suspendUserAction(userId: string): Promise<ActionResult> {
 
   if (error) return { success: false, error: error.message }
 
+  await logAdminAction(supabase, adminId, 'suspend_user', 'user', userId)
+
   revalidatePath('/admin/users')
   return { success: true }
 }
 
 export async function restoreUserAction(userId: string): Promise<ActionResult> {
-  const { supabase } = await getAdminClient()
-  if (!supabase) return { success: false, error: 'غير مصرح لك' }
+  const { supabase, adminId } = await getAdminClient()
+  if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
   const { error } = await supabase
     .from('profiles')
@@ -213,6 +232,31 @@ export async function restoreUserAction(userId: string): Promise<ActionResult> {
 
   if (error) return { success: false, error: error.message }
 
+  await logAdminAction(supabase, adminId, 'restore_user', 'user', userId)
+
   revalidatePath('/admin/users')
+  return { success: true }
+}
+
+// ─── Post Admin Actions ───────────────────────────────────────────────────────
+
+export async function manuallyExpirePostAction(postId: string): Promise<ActionResult> {
+  const { supabase, adminId } = await getAdminClient()
+  if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
+
+  const { error } = await supabase
+    .from('posts')
+    .update({
+      status: 'expired',
+      expires_at: new Date().toISOString()
+    })
+    .eq('id', postId)
+
+  if (error) return { success: false, error: error.message }
+
+  await logAdminAction(supabase, adminId, 'expire_post', 'post', postId)
+
+  revalidatePath('/marketplace')
+  revalidatePath(`/marketplace/${postId}`)
   return { success: true }
 }

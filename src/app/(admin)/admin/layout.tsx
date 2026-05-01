@@ -44,13 +44,14 @@ export default async function AdminLayout({
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect(ROUTES.LOGIN)
 
-  const { data: profile } = await (supabase
+  const { data: profile } = await supabase
     .from('profiles')
     .select('role, full_name')
     .eq('id', user.id)
-    .single() as any)
+    .maybeSingle()
 
-  if (!profile || profile.role !== 'admin') redirect(ROUTES.HOME)
+  const userProfile = profile as { role: string; full_name: string } | null
+  if (!userProfile || userProfile.role !== 'admin') redirect(ROUTES.HOME)
 
   return (
     <div className="flex min-h-screen bg-muted/30" dir="rtl">
@@ -83,7 +84,7 @@ export default async function AdminLayout({
         <div className="border-t border-border p-3">
           <div className="rounded-lg bg-muted px-3 py-2.5">
             <p className="text-xs font-medium text-foreground truncate">
-              {profile.full_name}
+              {userProfile.full_name}
             </p>
             <p className="text-[11px] text-muted-foreground">مدير النظام</p>
           </div>

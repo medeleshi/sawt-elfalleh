@@ -51,7 +51,6 @@ export async function registerAction(
   const raw = {
     email:    formData.get('email'),
     password: formData.get('password'),
-    role:     formData.get('role'),
     // Checkbox sends 'on' when checked, null when not
     terms:    formData.get('terms') === 'on' ? true : false,
   }
@@ -64,13 +63,9 @@ export async function registerAction(
   const supabase = await createClient()
 
   // Step 1: Create auth user.
-  // The DB trigger handle_new_user() auto-creates profiles + notification_settings.
   const { data: authData, error: signUpError } = await supabase.auth.signUp({
     email:    parsed.data.email,
     password: parsed.data.password,
-    options: {
-      data: { role: parsed.data.role },
-    },
   })
 
   if (signUpError) {
@@ -81,33 +76,9 @@ export async function registerAction(
     return { success: false, error: 'حدث خطأ غير متوقع. يرجى المحاولة مجدداً.' }
   }
 
-  // Step 2: Set the chosen role on the profile row.
-  // Use upsert to avoid a race condition where the trigger insert hasn't
-  // completed before this update runs.
-  const { error: profileError } = await supabase
-    .from('profiles')
-    .upsert(
-      { 
-        id: authData.user.id, 
-        role: parsed.data.role,
-        full_name: '', // Required field, will be filled in onboarding
-        show_phone: true,
-        is_profile_completed: false
-      } as any,
-      { onConflict: 'id' }
-    )
-
-  if (profileError) {
-    // Role failed to save — account exists but role is wrong.
-    // Return error so user knows to try again; do not silently proceed.
-    return {
-      success: false,
-      error: 'تم إنشاء الحساب لكن تعذّر حفظ نوع الحساب. يرجى المحاولة مجدداً.',
-    }
-  }
-
-  // After register → always go to onboarding (is_profile_completed = false)
-  redirect(ROUTES.ONBOARDING_PROFILE)
+  // Step 2: Redirect to onboarding. 
+  // We use a small delay or a client-side friendly redirect by returning success.
+  return { success: true, message: 'SUCCESS_REDIRECT' }
 }
 
 // ─── Google OAuth ─────────────────────────────────────────────────────────────
@@ -215,8 +186,8 @@ function mapAuthError(message: string): string {
   if (message.includes('Unable to validate email address')) {
     return 'البريد الإلكتروني غير صالح.'
   }
-  if (message.includes('Email rate limit exceeded')) {
-    return 'تم إرسال طلبات كثيرة. يرجى الانتظار قبل المحاولة مجدداً.'
+  if (message.includes('Email rate limit exceeded') || message.includes('over_email_send_rate_limit')) {
+    return 'تم إرسال طلبات كثيرة جداً. يرجى الانتظار بضع دقائق قبل المحاولة مجدداً.'
   }
   if (message.includes('same password')) {
     return 'كلمة المرور الجديدة يجب أن تختلف عن القديمة.'

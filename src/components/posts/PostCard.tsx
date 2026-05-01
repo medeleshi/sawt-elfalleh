@@ -4,6 +4,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import type { PostCard as PostCardType } from '@/types/marketplace';
+import SavePostButton from './SavePostButton';
 
 function formatPrice(price: number): string {
   return price === 0 ? 'سعر قابل للتفاوض' : `${price.toLocaleString('ar-TN')} د.ت`;
@@ -26,12 +27,17 @@ function timeAgo(dateStr: string): string {
 
 interface Props {
   post: PostCardType;
+  initialIsSaved?: boolean;
 }
 
-export default function PostCard({ post }: Props) {
+export default function PostCard({ post, initialIsSaved = false }: Props) {
   const coverImage = post.post_images
     ?.sort((a, b) => a.sort_order - b.sort_order)
     .at(0);
+
+  const isExpiringSoon = post.expires_at && 
+    (new Date(post.expires_at).getTime() - new Date().getTime()) < 7 * 24 * 60 * 60 * 1000 &&
+    (new Date(post.expires_at).getTime() - new Date().getTime()) > 0;
 
   const isSell = post.type === 'sell';
 
@@ -42,7 +48,7 @@ export default function PostCard({ post }: Props) {
       aria-label={post.title}
     >
       {/* Image */}
-      <div className="post-card__image-wrap">
+      <div className="post-card__image-wrap relative">
         {coverImage ? (
           <Image
             src={coverImage.url}
@@ -66,6 +72,18 @@ export default function PostCard({ post }: Props) {
         {post.is_negotiable && (
           <span className="post-card__negotiable-badge">قابل للتفاوض</span>
         )}
+
+        {isExpiringSoon && (
+          <span className="absolute top-2 right-2 bg-amber-500 text-white text-[10px] font-bold px-2 py-1 rounded shadow-sm z-10">
+            قرب الانتهاء
+          </span>
+        )}
+
+        <SavePostButton 
+          postId={post.id} 
+          initialIsSaved={initialIsSaved} 
+          className="post-card__save-btn absolute top-2 left-2 z-10 bg-white/80 backdrop-blur-sm p-1.5 rounded-full shadow-sm hover:bg-white hover:scale-110 transition-all text-brand-600"
+        />
       </div>
 
       {/* Body */}

@@ -1893,3 +1893,553 @@ body {
 .toast-card__close {
   @apply shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground;
 }
+
+/* ============================================================
+   PHASE 10 — NOTIFICATIONS SYSTEM STYLES
+   ============================================================ */
+
+.notifications-page {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 24px 20px 60px;
+}
+
+.notifications-page__header {
+  margin-bottom: 24px;
+}
+
+.notifications-page__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.notifications-page__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--c-text);
+}
+
+.notifications-page__badge {
+  background: var(--c-sell);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 100px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.notifications-page__meta {
+  font-size: 14px;
+  color: var(--c-text-3);
+}
+
+/* List container */
+.notifications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Notification Item */
+.notification-item {
+  position: relative;
+  display: flex;
+  gap: 16px;
+  padding: 16px;
+  background: var(--c-surface);
+  border: 1.5px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  transition: all 0.2s ease;
+}
+
+.notification-item--unread {
+  border-color: rgba(45, 106, 45, 0.25);
+  background: linear-gradient(to left, var(--c-primary-light), var(--c-surface));
+}
+
+.notification-item--read {
+  opacity: 0.85;
+}
+
+.notification-item__dot {
+  position: absolute;
+  top: 18px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: var(--c-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 0 2px #fff;
+}
+
+.notification-item__icon {
+  width: 44px;
+  height: 44px;
+  background: var(--c-surface-2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.notification-item__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.notification-item__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+
+.notification-badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 100px;
+  text-transform: uppercase;
+}
+
+.notification-badge--region   { background: #eef2ff; color: #4338ca; }
+.notification-badge--activity { background: #ecfdf5; color: #047857; }
+.notification-badge--platform { background: #fff7ed; color: #c2410c; }
+.notification-badge--default  { background: #f3f4f6; color: #374151; }
+
+.notification-item__time {
+  font-size: 12px;
+  color: var(--c-text-3);
+  white-space: nowrap;
+}
+
+.notification-item__title {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--c-text);
+  margin-bottom: 2px;
+}
+
+.notification-item__body {
+  font-size: 14px;
+  color: var(--c-text-2);
+  line-height: 1.5;
+}
+
+/* Action button */
+.notification-item__action {
+  align-self: center;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--c-surface-2);
+  color: var(--c-text-3);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.notification-item__action:hover:not(:disabled) {
+  background: var(--c-primary-light);
+  color: var(--c-primary);
+}
+
+.notification-item__spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0,0,0,0.1);
+  border-top-color: var(--c-primary);
+  border-radius: 50%;
+  animation: notification-spin 0.6s linear infinite;
+}
+
+/* Mark All Button */
+.mark-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--c-surface-2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  font-family: var(--font-arabic);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--c-text-2);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.mark-all-btn:hover:not(:disabled) {
+  background: var(--c-border);
+  color: var(--c-text);
+}
+
+.mark-all-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.mark-all-btn__spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(0,0,0,0.1);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: notification-spin 0.6s linear infinite;
+}
+
+/* Notifications Filter */
+.notifications-filter {
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.notifications-filter__options {
+  display: flex;
+  gap: 24px;
+}
+
+.notifications-filter__btn {
+  position: relative;
+  padding: 10px 4px;
+  background: none;
+  border: none;
+  font-family: var(--font-arabic);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--c-text-3);
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.notifications-filter__btn:hover {
+  color: var(--c-text);
+}
+
+.notifications-filter__btn--active {
+  color: var(--c-primary);
+}
+
+.notifications-filter__btn--active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--c-primary);
+}
+
+.notifications-filter__count {
+  margin-right: 6px;
+  background: var(--c-primary-light);
+  color: var(--c-primary);
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 100px;
+}
+
+@keyframes notification-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 640px) {
+  .notifications-page { padding: 16px 12px 48px; }
+  .notification-item { gap: 12px; padding: 12px; }
+  .notification-item__icon { width: 36px; height: 36px; font-size: 16px; }
+  .notification-item__title { font-size: 14px; }
+  .notification-item__body { font-size: 13px; }
+}
+
+/* ============================================================
+   PHASE 11 — PUBLIC & STATIC PAGES STYLES
+   ============================================================ */
+
+.public-header {
+  @apply sticky top-0 z-50 w-full border-b border-stone-200 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/80;
+}
+
+.public-header__inner {
+  @apply container mx-auto flex h-16 items-center justify-between px-4;
+}
+
+.public-header__brand {
+  @apply flex items-center gap-2 text-lg font-bold text-brand-800 transition-opacity hover:opacity-80;
+}
+
+.public-header__nav {
+  @apply hidden items-center gap-6 md:flex;
+}
+
+.public-header__link {
+  @apply text-sm font-medium text-stone-600 transition-colors hover:text-brand-600;
+}
+
+.public-header__actions {
+  @apply flex items-center gap-3;
+}
+
+.public-header__login {
+  @apply text-sm font-bold text-stone-700 hover:text-brand-600;
+}
+
+.public-header__register {
+  @apply rounded-lg bg-brand-600 px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-brand-700 hover:shadow-md active:scale-95;
+}
+
+/* Public Page Shell */
+.public-page__hero {
+  @apply bg-stone-50 border-b border-stone-100 py-16 sm:py-24;
+}
+
+.public-page__hero-inner {
+  @apply container mx-auto px-4 text-center;
+}
+
+.public-page__eyebrow {
+  @apply mb-4 inline-block text-sm font-bold tracking-widest text-brand-600 uppercase;
+}
+
+.public-page__title {
+  @apply text-3xl font-extrabold text-stone-900 sm:text-5xl;
+}
+
+.public-page__subtitle {
+  @apply mt-6 text-lg text-stone-500 max-w-2xl mx-auto;
+}
+
+.public-page__body {
+  @apply py-16 sm:py-24;
+}
+
+.public-page__content {
+  @apply container mx-auto px-4 max-w-4xl;
+}
+
+/* Contact Form UI */
+.contact-form {
+  @apply space-y-6;
+}
+
+.contact-form__field {
+  @apply space-y-2;
+}
+
+.contact-form__label {
+  @apply text-sm font-bold text-stone-700;
+}
+
+.contact-form__input {
+  @apply w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-3 text-sm transition-all focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-4 focus:ring-brand-500/10;
+}
+
+.contact-form__textarea {
+  @apply resize-none;
+}
+
+.contact-form__submit {
+  @apply w-full rounded-xl bg-brand-600 py-4 text-sm font-bold text-white shadow-lg transition-all hover:bg-brand-700 hover:shadow-xl active:scale-95 disabled:opacity-70;
+}
+
+.contact-form__success {
+  @apply flex items-center gap-3 rounded-xl bg-green-50 p-4 text-sm font-bold text-green-700 border border-green-100;
+}
+
+.contact-form__error {
+  @apply flex items-center gap-3 rounded-xl bg-red-50 p-4 text-sm font-bold text-red-700 border border-red-100;
+}
+
+.contact-form__spinner {
+  @apply h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white;
+}
+
+/* Public Footer */
+.public-footer {
+  @apply border-t border-stone-200 bg-stone-50 py-12;
+}
+
+.public-footer__inner {
+  @apply container mx-auto px-4 flex flex-col items-center gap-8 text-center;
+}
+
+.public-footer__brand {
+  @apply flex items-center gap-2;
+}
+
+.public-footer__links {
+  @apply flex flex-wrap justify-center gap-x-8 gap-y-4 text-sm font-medium text-stone-500;
+}
+
+.public-footer__links a:hover {
+  @apply text-brand-600;
+}
+
+.public-footer__copy {
+  @apply text-xs text-stone-400;
+}
+
+/* Typography Helpers */
+.prose-ar {
+  @apply leading-relaxed text-stone-700 space-y-6;
+}
+
+.prose-ar h2, .prose-ar h3 {
+  @apply font-bold text-stone-900 mt-10 mb-4;
+}
+
+.prose-ar h2 { @apply text-2xl; }
+.prose-ar h3 { @apply text-xl; }
+
+.prose-ar p { @apply text-lg; }
+
+.prose-ar ul, .prose-ar ol {
+  @apply pr-6 space-y-3;
+}
+
+.prose-ar li { @apply relative; }
+
+.prose-ar ul li::before {
+  content: "•";
+  @apply absolute -right-5 text-brand-500 font-bold;
+}
+
+@media (max-width: 768px) {
+  .public-header__inner { @apply h-14; }
+  .public-page__hero { @apply py-12; }
+  .public-page__title { @apply text-3xl; }
+  .public-page__body { @apply py-12; }
+}
+
+/* ─── Username Settings Form ─────────────────────────────────────────────── */
+
+.username-settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.username-label {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #44403c;
+}
+
+.username-input-wrapper {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #d6d3d1;
+  border-radius: 0.75rem;
+  overflow: hidden;
+  background: #fff;
+  transition: border-color 0.15s ease;
+}
+
+.username-input-wrapper:focus-within {
+  border-color: #65a30d;
+  box-shadow: 0 0 0 3px rgba(101, 163, 13, 0.12);
+}
+
+.username-prefix {
+  padding: 0.625rem 0.75rem;
+  font-size: 0.75rem;
+  color: #a8a29e;
+  background: #fafaf9;
+  border-left: 1.5px solid #e7e5e4;
+  white-space: nowrap;
+  font-family: ui-monospace, monospace;
+  direction: ltr;
+}
+
+.username-input {
+  flex: 1;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.9rem;
+  font-family: ui-monospace, monospace;
+  color: #1c1917;
+  outline: none;
+  background: transparent;
+  direction: ltr;
+  text-align: left;
+  min-width: 0;
+}
+
+.username-status-icon {
+  padding: 0 0.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.username-feedback {
+  min-height: 1.25rem;
+}
+
+.username-feedback-ok {
+  font-size: 0.8rem;
+  color: #16a34a;
+}
+
+.username-feedback-error {
+  font-size: 0.8rem;
+  color: #dc2626;
+}
+
+.username-suggestion-btn {
+  font-size: 0.8rem;
+  color: #65a30d;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+  direction: ltr;
+}
+
+.username-hint {
+  font-size: 0.75rem;
+  color: #a8a29e;
+  direction: rtl;
+}
+
+.username-save-btn {
+  align-self: flex-start;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #fff;
+  background: #65a30d;
+  border: none;
+  border-radius: 0.75rem;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+
+.username-save-btn:hover:not(:disabled) {
+  background: #4d7c0f;
+}
+
+.username-save-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}

@@ -27,7 +27,7 @@ export default async function Navbar() {
       .from('profiles')
       .select('id, full_name, username, avatar_url, role')
       .eq('id', user.id)
-      .single()
+      .maybeSingle()
     profile = data
   }
 

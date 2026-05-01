@@ -7,7 +7,8 @@ import {
 } from '@/lib/queries/profile.queries'
 import NotificationSettingsForm from '@/components/settings/NotificationSettingsForm'
 import ShowPhoneToggle from '@/components/settings/ShowPhoneToggle'
-import { ChevronLeft, User, Bell, Lock, Shield } from 'lucide-react'
+import UsernameSettingsForm from '@/components/settings/UsernameSettingsForm'
+import { ChevronLeft, User, Bell, Lock, Shield, AtSign } from 'lucide-react'
 
 export const metadata = {
   title: 'الإعدادات — صوت الفلاح',
@@ -67,7 +68,21 @@ export default async function SettingsPage() {
           </Link>
         </section>
 
-        {/* Privacy: Show Phone */}
+        {/* Username */}
+        <section className="bg-white rounded-2xl border border-stone-200 mb-4 overflow-hidden">
+          <div className="px-5 py-4 border-b border-stone-100">
+            <div className="flex items-center gap-2">
+              <AtSign className="w-4 h-4 text-stone-500" />
+              <h2 className="text-sm font-bold text-stone-700 uppercase tracking-wide">
+                اسم المستخدم
+              </h2>
+            </div>
+          </div>
+          <div className="p-5">
+            <UsernameSettingsForm currentUsername={profile.username ?? null} />
+          </div>
+        </section>
+
         <section className="bg-white rounded-2xl border border-stone-200 mb-4 overflow-hidden">
           <div className="px-5 py-4 border-b border-stone-100">
             <h2 className="text-sm font-bold text-stone-700 uppercase tracking-wide">

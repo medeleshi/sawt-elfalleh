@@ -1,15 +1,17 @@
 import { notFound } from 'next/navigation'
 import Image from 'next/image'
-import Link from 'next/link'
-import { MapPin, Phone, Wheat, ShoppingBag, Calendar } from 'lucide-react'
+import { MapPin, Phone, Calendar } from 'lucide-react'
 import {
   getProfileByUsername,
   getUserPosts,
   getUserPostStats,
 } from '@/lib/queries/profile.queries'
+import MyProfileTabs from '@/components/profile/MyProfileTabs'
+import ReportModal from '@/components/reports/ReportModal'
 
 interface PageProps {
   params: Promise<{ username: string }>
+  searchParams: Promise<{ page?: string }>
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -36,17 +38,18 @@ export async function generateMetadata({ params }: PageProps) {
   }
 }
 
-export default async function PublicProfilePage({ params }: PageProps) {
+export default async function PublicProfilePage({ params, searchParams }: PageProps) {
   const { username } = await params
+  const { page: pageStr } = await searchParams
+  const page = parseInt(pageStr || '1', 10)
+
   const profile = (await getProfileByUsername(username)) as any
   if (!profile) notFound()
 
-  const [posts, stats] = (await Promise.all([
-    getUserPosts(profile.id),
+  const [{ posts, pagination: postsPagination }, stats] = (await Promise.all([
+    getUserPosts(profile.id, page),
     getUserPostStats(profile.id),
-  ])) as [any[], any]
-
-  const activePosts = posts.filter((p) => p.status === 'active')
+  ])) as [any, any]
 
   return (
     <div className="min-h-screen bg-[#f9f6f0]" dir="rtl">
@@ -111,6 +114,18 @@ export default async function PublicProfilePage({ params }: PageProps) {
                   عضو منذ {new Date(profile.created_at).getFullYear()}
                 </span>
               </div>
+
+              {/* Report User Action */}
+              <div className="mt-4">
+                <ReportModal 
+                  reportedUserId={profile.id}
+                  trigger={
+                    <button className="text-xs text-stone-400 hover:text-red-500 transition-colors flex items-center gap-1">
+                      إبلاغ عن هذا المستخدم
+                    </button>
+                  }
+                />
+              </div>
             </div>
 
             {/* Stats */}
@@ -132,94 +147,13 @@ export default async function PublicProfilePage({ params }: PageProps) {
         </div>
       </div>
 
-      {/* Posts */}
+      {/* Posts & Tabs */}
       <div className="max-w-4xl mx-auto px-4 py-8">
-        <h2 className="text-lg font-bold text-stone-900 mb-4">
-          منشورات {profile.full_name}
-        </h2>
-
-        {posts.length === 0 ? (
-          <div className="text-center py-16 text-stone-400">
-            <Wheat className="w-12 h-12 mx-auto mb-3 opacity-40" />
-            <p>لا توجد منشورات بعد</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {posts.map((post) => {
-              const firstImage = (
-                post.post_images as Array<{ url: string; sort_order: number }>
-              )?.sort((a, b) => a.sort_order - b.sort_order)[0]
-
-              return (
-                <Link
-                  key={post.id}
-                  href={`/marketplace/${post.id}`}
-                  className={`bg-white rounded-xl border overflow-hidden hover:shadow-md transition-shadow ${
-                    post.status !== 'active'
-                      ? 'opacity-60 border-stone-200'
-                      : 'border-stone-200'
-                  }`}
-                >
-                  {firstImage ? (
-                    <div className="relative h-36">
-                      <Image
-                        src={firstImage.url}
-                        alt={post.title}
-                        fill
-                        className="object-cover"
-                      />
-                      {post.status !== 'active' && (
-                        <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
-                          <span className="text-white text-sm font-bold bg-black/60 px-3 py-1 rounded">
-                            منتهي
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="h-36 bg-stone-50 flex items-center justify-center">
-                      <span className="text-3xl">
-                        {(post.categories as { icon: string } | null)?.icon ??
-                          '📦'}
-                      </span>
-                    </div>
-                  )}
-                  <div className="p-3">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span
-                        className={`text-xs font-semibold px-2 py-0.5 rounded ${
-                          post.type === 'sell'
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-blue-100 text-blue-700'
-                        }`}
-                      >
-                        {post.type === 'sell' ? 'بيع' : 'شراء'}
-                      </span>
-                      <span className="text-xs text-stone-400 flex items-center gap-1">
-                        <MapPin className="w-3 h-3" />
-                        {(post.regions as { name_ar: string } | null)?.name_ar}
-                      </span>
-                    </div>
-                    <p className="text-sm font-semibold text-stone-800 truncate">
-                      {post.title}
-                    </p>
-                    <div className="flex items-center justify-between mt-1">
-                      <span className="text-green-700 font-bold text-sm">
-                        {post.price > 0
-                          ? `${Number(post.price).toFixed(3)} د.ت`
-                          : 'السعر قابل للتفاوض'}
-                      </span>
-                      <span className="text-xs text-stone-400">
-                        {post.quantity}{' '}
-                        {(post.units as { symbol: string } | null)?.symbol}
-                      </span>
-                    </div>
-                  </div>
-                </Link>
-              )
-            })}
-          </div>
-        )}
+        <MyProfileTabs 
+          posts={posts} 
+          postsPagination={postsPagination}
+          isOwnProfile={false}
+        />
       </div>
     </div>
   )

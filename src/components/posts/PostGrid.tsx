@@ -12,9 +12,9 @@ interface PostGridProps {
 
 /**
  * Responsive post card grid.
- * Mobile: 2 columns (per PRD spec §7.3)
- * Tablet: 3 columns
- * Desktop: 4 columns
+ * Mobile: 1 column
+ * Tablet: 2-3 columns
+ * Desktop: 4+ columns
  *
  * Shows EmptyState when posts array is empty.
  */
@@ -38,7 +38,7 @@ export default function PostGrid({
   return (
     <div
       className={cn(
-        'grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
+        'grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5',
         className
       )}
     >

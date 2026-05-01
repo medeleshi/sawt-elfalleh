@@ -1,22 +1,46 @@
+// src/app/offline/page.tsx
 'use client'
+
+import Link from 'next/link'
+import { ROUTES } from '@/lib/utils/constants'
+
 export default function OfflinePage() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-4 text-center">
-      <span className="text-6xl" role="img" aria-label="لا يوجد إنترنت">
-        📡
-      </span>
-      <div>
-        <h1 className="text-2xl font-bold text-foreground">لا يوجد اتصال بالإنترنت</h1>
-        <p className="mt-2 text-sm text-muted-foreground">
-          تحقق من اتصالك بالإنترنت وحاول مجدداً.
-        </p>
+    <div className="system-page" dir="rtl">
+      <div className="system-page__card">
+
+        {/* Illustration */}
+        <div className="system-page__visual" aria-hidden="true">
+          <span className="system-page__emoji">📡</span>
+          <div className="system-page__signal-bars" aria-hidden="true">
+            <span /><span /><span /><span />
+          </div>
+        </div>
+
+        {/* Copy */}
+        <div className="system-page__copy">
+          <h1 className="system-page__title">لا يوجد اتصال بالإنترنت</h1>
+          <p className="system-page__desc">
+            تحقق من اتصالك بالشبكة أو بيانات الهاتف،
+            <br />
+            ثم اضغط "إعادة المحاولة".
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="system-page__actions">
+          <button
+            onClick={() => window.location.reload()}
+            className="sys-btn sys-btn--primary"
+          >
+            إعادة المحاولة
+          </button>
+          <Link href={ROUTES.HOME} className="sys-btn sys-btn--outline">
+            الرئيسية
+          </Link>
+        </div>
+
       </div>
-      <button
-        onClick={() => window.location.reload()}
-        className="rounded-full bg-brand-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-700"
-      >
-        إعادة المحاولة
-      </button>
     </div>
   )
 }

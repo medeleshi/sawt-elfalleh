@@ -30,12 +30,12 @@ export default async function MyProfilePage() {
 
   if (!user) redirect('/login')
 
-  const [profile, posts, savedPosts, stats] = await Promise.all([
+  const [profile, posts, savedPosts, stats] = (await Promise.all([
     getMyProfile(user.id),
     getUserPosts(user.id),
     getMySavedPosts(user.id),
     getUserPostStats(user.id),
-  ])
+  ])) as [any, any[], any[], any]
 
   if (!profile) redirect('/login')
 

@@ -28,7 +28,7 @@ const ROLE_COLOR: Record<string, string> = {
 
 export async function generateMetadata({ params }: PageProps) {
   const { username } = await params
-  const profile = await getProfileByUsername(username)
+  const profile = (await getProfileByUsername(username)) as any
   if (!profile) return { title: 'المستخدم غير موجود' }
   return {
     title: `${profile.full_name} — صوت الفلاح`,
@@ -38,13 +38,13 @@ export async function generateMetadata({ params }: PageProps) {
 
 export default async function PublicProfilePage({ params }: PageProps) {
   const { username } = await params
-  const profile = await getProfileByUsername(username)
+  const profile = (await getProfileByUsername(username)) as any
   if (!profile) notFound()
 
-  const [posts, stats] = await Promise.all([
+  const [posts, stats] = (await Promise.all([
     getUserPosts(profile.id),
     getUserPostStats(profile.id),
-  ])
+  ])) as [any[], any]
 
   const activePosts = posts.filter((p) => p.status === 'active')
 

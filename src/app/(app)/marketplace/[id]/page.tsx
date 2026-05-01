@@ -13,6 +13,7 @@ import PostImageSlider from '@/components/posts/PostImageSlider'
 import PostContactSection from '@/components/posts/PostContactSection'
 import SellerCard from '@/components/posts/SellerCard'
 import SimilarPosts from '@/components/posts/SimilarPosts'
+import ReportModal from '@/components/reports/ReportModal'
 
 // ─── SEO Metadata ─────────────────────────────────────────────────────────────
 
@@ -77,6 +78,7 @@ export default async function PostDetailsPage({
 
   const isSell = post.type === 'sell'
   const isExpired = post.status !== 'active'
+  const isOwnPost = currentUserId && profile?.id === currentUserId
 
   return (
     <div className="post-details-page">
@@ -224,16 +226,15 @@ export default async function PostDetailsPage({
             <SellerCard profile={profile} />
           )}
 
-          {/* Report link */}
-          <div className="post-details__report">
-            <button className="post-details__report-btn" type="button">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/>
-                <line x1="4" y1="22" x2="4" y2="15"/>
-              </svg>
-              الإبلاغ عن هذا الإعلان
-            </button>
-          </div>
+          {/* Report section — hidden for post owner */}
+          {!isOwnPost && (
+            <div className="post-details__report">
+              <ReportModal
+                postId={post.id}
+                targetLabel={post.title}
+              />
+            </div>
+          )}
         </div>
       </div>
 

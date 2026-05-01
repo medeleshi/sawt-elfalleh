@@ -22,7 +22,7 @@ export async function updateProfileAction(
     return { success: false, error: parsed.error.errors[0].message }
   }
 
-  const supabase = await createClient()
+  const supabase = (await createClient()) as any
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -111,7 +111,7 @@ export async function updateNotificationSettingsAction(
     return { success: false, error: 'بيانات غير صالحة' }
   }
 
-  const supabase = await createClient()
+  const supabase = (await createClient()) as any
   const {
     data: { user },
   } = await supabase.auth.getUser()

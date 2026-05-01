@@ -21,10 +21,10 @@ export default async function SettingsPage() {
 
   if (!user) redirect('/login')
 
-  const [profile, notifSettings] = await Promise.all([
+  const [profile, notifSettings] = (await Promise.all([
     getMyProfile(user.id),
     getNotificationSettings(user.id),
-  ])
+  ])) as [any, any]
 
   if (!profile) redirect('/login')
 

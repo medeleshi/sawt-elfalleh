@@ -1606,3 +1606,290 @@ body {
   .post-slider__thumb { width: 58px; height: 58px; }
   .contact-modal__phone-number { font-size: 17px; }
 }
+
+/* ============================================================
+   PHASE 12 — SYSTEM PAGES + DIALOGS + TOAST
+   ============================================================ */
+
+/* ── Shared system page shell ───────────────────────────────── */
+
+.system-page {
+  @apply flex min-h-screen items-center justify-center bg-background px-4 py-16;
+}
+
+.system-page__card {
+  @apply flex w-full max-w-md flex-col items-center gap-6 rounded-2xl border border-border bg-card p-10 text-center shadow-sm;
+}
+
+/* Visual / illustration area */
+.system-page__visual {
+  @apply relative flex flex-col items-center gap-1;
+}
+
+.system-page__emoji {
+  @apply text-7xl leading-none;
+}
+
+.system-page__code {
+  @apply mt-1 text-4xl font-extrabold tracking-tight text-brand-600;
+}
+
+.system-page__code--warn {
+  @apply text-amber-500;
+}
+
+/* Offline: signal bars animation */
+.system-page__signal-bars {
+  @apply mt-3 flex items-end justify-center gap-1;
+}
+
+.system-page__signal-bars span {
+  @apply w-2 rounded-sm bg-muted animate-pulse;
+}
+.system-page__signal-bars span:nth-child(1) { height: 8px;  animation-delay: 0s; }
+.system-page__signal-bars span:nth-child(2) { height: 14px; animation-delay: 0.15s; }
+.system-page__signal-bars span:nth-child(3) { height: 20px; animation-delay: 0.3s; }
+.system-page__signal-bars span:nth-child(4) { height: 28px; animation-delay: 0.45s; }
+
+/* Copy */
+.system-page__copy {
+  @apply space-y-2;
+}
+
+.system-page__title {
+  @apply text-xl font-bold text-foreground;
+}
+
+.system-page__desc {
+  @apply text-sm leading-relaxed text-muted-foreground;
+}
+
+.system-page__digest {
+  @apply mt-2 text-xs text-muted-foreground;
+}
+
+.system-page__digest code {
+  @apply rounded bg-muted px-1.5 py-0.5 font-mono;
+}
+
+/* Action buttons */
+.system-page__actions {
+  @apply flex flex-wrap items-center justify-center gap-3;
+}
+
+/* System button variants */
+.sys-btn {
+  @apply inline-flex items-center justify-center gap-1.5 rounded-xl px-5 py-2.5 text-sm font-semibold transition-colors;
+}
+
+.sys-btn--primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
+}
+
+.sys-btn--outline {
+  @apply border border-border bg-background text-foreground hover:bg-secondary;
+}
+
+.sys-btn--ghost {
+  @apply text-muted-foreground hover:text-foreground;
+}
+
+/* ── Global loading spinner overlay ─────────────────────────── */
+
+.system-loading {
+  @apply flex min-h-[60vh] flex-col items-center justify-center gap-3;
+}
+
+.system-loading__label {
+  @apply text-sm text-muted-foreground;
+}
+
+/* ── ConfirmDialog ───────────────────────────────────────────── */
+
+/* Backdrop */
+.cd-backdrop {
+  @apply fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm;
+  animation: cd-fade-in 0.15s ease-out both;
+}
+
+@keyframes cd-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Dialog panel */
+.cd-dialog {
+  @apply relative w-full max-w-sm rounded-2xl border border-border bg-card p-6 shadow-xl;
+  animation: cd-slide-up 0.18s ease-out both;
+}
+
+@keyframes cd-slide-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Close × button */
+.cd-close {
+  @apply absolute left-4 top-4 flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground;
+}
+
+/* Header */
+.cd-header {
+  @apply mb-3 flex items-center gap-2;
+}
+
+.cd-header__icon {
+  @apply text-xl leading-none;
+}
+
+.cd-header__title {
+  @apply text-base font-bold text-foreground;
+}
+
+/* Description */
+.cd-desc {
+  @apply mb-4 text-sm leading-relaxed text-muted-foreground;
+}
+
+/* Error message */
+.cd-error {
+  @apply mb-3 rounded-lg bg-destructive/10 px-3 py-2 text-xs text-destructive;
+}
+
+/* Actions row */
+.cd-actions {
+  @apply mt-5 flex gap-2.5;
+}
+
+/* Shared button base */
+.cd-btn {
+  @apply inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-colors disabled:pointer-events-none disabled:opacity-60;
+}
+
+.cd-btn--cancel {
+  @apply border border-border bg-background text-foreground hover:bg-secondary;
+}
+
+.cd-btn--primary {
+  @apply bg-primary text-primary-foreground hover:bg-primary/90;
+}
+
+.cd-btn--danger {
+  @apply bg-destructive text-destructive-foreground hover:bg-destructive/90;
+}
+
+.cd-btn--warning {
+  @apply bg-amber-500 text-white hover:bg-amber-600;
+}
+
+/* Spinner inside button */
+.cd-spinner {
+  @apply inline-block h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white;
+}
+
+/* ── ReportModal ─────────────────────────────────────────────── */
+
+/* Trigger button */
+.report-trigger {
+  @apply flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-destructive;
+}
+
+/* Modal panel */
+.report-modal {
+  @apply w-full max-w-md rounded-2xl border border-border bg-card shadow-xl;
+  animation: cd-slide-up 0.18s ease-out both;
+}
+
+.report-modal__header {
+  @apply flex items-center justify-between border-b border-border px-5 py-4;
+}
+
+.report-modal__header-left {
+  @apply flex items-center gap-2;
+}
+
+.report-modal__title {
+  @apply text-base font-bold text-foreground;
+}
+
+.report-modal__body {
+  @apply p-5;
+}
+
+.report-modal__target {
+  @apply mb-4 text-xs text-muted-foreground;
+}
+
+.report-modal__label {
+  @apply mb-3 text-sm font-semibold text-foreground;
+}
+
+.report-modal__reasons {
+  @apply mb-4 space-y-2;
+}
+
+.report-reason {
+  @apply flex cursor-pointer items-center gap-3 rounded-lg border border-border px-3 py-2.5 text-sm text-foreground transition-colors hover:border-muted-foreground hover:bg-secondary;
+}
+
+.report-reason--active {
+  @apply border-destructive/40 bg-destructive/5 text-destructive;
+}
+
+.report-modal__textarea {
+  @apply mb-4 w-full resize-none rounded-xl border border-input bg-background px-3 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20;
+}
+
+/* Success state */
+.report-modal__success {
+  @apply flex flex-col items-center gap-3 py-6 text-center;
+}
+
+.report-modal__success-icon {
+  @apply text-4xl;
+}
+
+.report-modal__success-title {
+  @apply text-base font-bold text-foreground;
+}
+
+.report-modal__success-desc {
+  @apply text-sm text-muted-foreground;
+}
+
+/* ── Toast system ────────────────────────────────────────────── */
+
+.toast-container {
+  @apply fixed bottom-5 left-5 z-[100] flex flex-col gap-2;
+}
+
+/* On mobile, stack from the bottom center */
+@media (max-width: 480px) {
+  .toast-container {
+    @apply bottom-4 left-4 right-4;
+  }
+}
+
+.toast-card {
+  @apply flex w-full max-w-xs items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 shadow-lg;
+}
+
+.toast-card--success {
+  @apply border-green-200 bg-green-50 dark:border-green-900/40 dark:bg-green-950/30;
+}
+
+.toast-card--error {
+  @apply border-red-200 bg-red-50 dark:border-red-900/40 dark:bg-red-950/30;
+}
+
+.toast-card--info {
+  @apply border-blue-200 bg-blue-50 dark:border-blue-900/40 dark:bg-blue-950/30;
+}
+
+.toast-card__msg {
+  @apply flex-1 text-sm font-medium text-foreground;
+}
+
+.toast-card__close {
+  @apply shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground;
+}

@@ -1,6 +1,8 @@
+// src/app/layout.tsx
 import type { Metadata } from 'next'
 import '@/styles/globals.css'
 import { APP_NAME, APP_DESCRIPTION } from '@/lib/utils/constants'
+import { Toaster } from '@/components/shared/Toast'
 
 export const metadata: Metadata = {
   title: {
@@ -29,6 +31,8 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-background font-sans antialiased">
         {children}
+        {/* Global toast notifications — renders fixed overlay, zero layout impact */}
+        <Toaster />
       </body>
     </html>
   )

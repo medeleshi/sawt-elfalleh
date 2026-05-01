@@ -1,27 +1,39 @@
+// src/app/not-found.tsx
 import Link from 'next/link'
 import { ROUTES } from '@/lib/utils/constants'
 
 export default function NotFound() {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center gap-6 bg-background px-4 text-center">
-      <span className="text-7xl" role="img" aria-label="404">
-        🌾
-      </span>
-      <div>
-        <h1 className="text-4xl font-bold text-brand-700">404</h1>
-        <p className="mt-2 text-lg font-medium text-foreground">
-          الصفحة غير موجودة
-        </p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          ربما تم حذف هذه الصفحة أو تغيير رابطها.
-        </p>
+    <div className="system-page" dir="rtl">
+      <div className="system-page__card">
+
+        {/* Illustration */}
+        <div className="system-page__visual" aria-hidden="true">
+          <span className="system-page__emoji">🌾</span>
+          <span className="system-page__code">404</span>
+        </div>
+
+        {/* Copy */}
+        <div className="system-page__copy">
+          <h1 className="system-page__title">الصفحة غير موجودة</h1>
+          <p className="system-page__desc">
+            ربما تم حذف هذه الصفحة أو تغيير رابطها.
+            <br />
+            تحقق من الرابط أو ابدأ من الصفحة الرئيسية.
+          </p>
+        </div>
+
+        {/* Actions */}
+        <div className="system-page__actions">
+          <Link href={ROUTES.HOME} className="sys-btn sys-btn--primary">
+            الرئيسية
+          </Link>
+          <Link href={ROUTES.MARKETPLACE} className="sys-btn sys-btn--outline">
+            تصفح السوق
+          </Link>
+        </div>
+
       </div>
-      <Link
-        href={ROUTES.HOME}
-        className="rounded-full bg-brand-600 px-6 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-700"
-      >
-        العودة للرئيسية
-      </Link>
     </div>
   )
 }

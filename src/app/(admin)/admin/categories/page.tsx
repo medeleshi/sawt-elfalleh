@@ -1,11 +1,26 @@
-export const dynamic = 'force-dynamic'
+import { getAdminCategories } from '@/lib/queries/admin.queries'
+import AdminCatalogTabs from '@/components/admin/AdminCatalogTabs'
 
-export default function Page() {
+export const dynamic = 'force-dynamic'
+export const metadata = { title: 'إدارة الأصناف' }
+
+export default async function AdminCategoriesPage() {
+  const { categories, units, regions } = await getAdminCategories()
+
   return (
-    <div className="flex min-h-[60vh] flex-col items-center justify-center gap-3 text-center">
-      <span className="text-5xl">🏷️</span>
-      <h1 className="text-xl font-semibold text-foreground">الأصناف</h1>
-      <p className="text-sm text-muted-foreground">قيد التطوير</p>
+    <div dir="rtl">
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-stone-900">إدارة الأصناف</h1>
+        <p className="text-stone-500 text-sm mt-1">
+          الفئات، المقاييس، والولايات
+        </p>
+      </div>
+
+      <AdminCatalogTabs
+        categories={categories}
+        units={units}
+        regions={regions}
+      />
     </div>
   )
 }

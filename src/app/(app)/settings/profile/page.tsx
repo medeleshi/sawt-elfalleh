@@ -23,7 +23,7 @@ export default async function EditProfilePage() {
 
   // Fetch all needed data in parallel
   const [profile, activityIds, followedRegionIds, regionsRes, categoriesRes] =
-    await Promise.all([
+    (await Promise.all([
       getMyProfile(user.id),
       getMyActivities(user.id),
       getMyFollowedRegions(user.id),
@@ -37,7 +37,7 @@ export default async function EditProfilePage() {
         .is('parent_id', null) // only top-level categories for activities
         .eq('is_active', true)
         .order('sort_order', { ascending: true }),
-    ])
+    ])) as [any, any[], any[], any, any]
 
   if (!profile) redirect('/login')
 

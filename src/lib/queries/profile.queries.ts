@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 // Get public profile by username
 // ─────────────────────────────────────────
 export async function getProfileByUsername(username: string) {
-  const supabase = await createClient()
+  const supabase = (await createClient()) as any
 
   const { data: profile, error } = await supabase
     .from('profiles')
@@ -36,7 +36,7 @@ export async function getProfileByUsername(username: string) {
 // Get public posts by user_id
 // ─────────────────────────────────────────
 export async function getUserPosts(userId: string) {
-  const supabase = await createClient()
+  const supabase = (await createClient()) as any
 
   const { data: posts } = await supabase
     .from('posts')
@@ -70,7 +70,7 @@ export async function getUserPosts(userId: string) {
 // Get my full profile (authenticated)
 // ─────────────────────────────────────────
 export async function getMyProfile(userId: string) {
-  const supabase = await createClient()
+  const supabase = (await createClient()) as any
 
   const { data: profile } = await supabase
     .from('profiles')
@@ -101,7 +101,7 @@ export async function getMyProfile(userId: string) {
 // Get saved posts for my profile
 // ─────────────────────────────────────────
 export async function getMySavedPosts(userId: string) {
-  const supabase = await createClient()
+  const supabase = (await createClient()) as any
 
   const { data } = await supabase
     .from('saved_posts')
@@ -137,31 +137,31 @@ export async function getMySavedPosts(userId: string) {
 // Get user activities (category_ids)
 // ─────────────────────────────────────────
 export async function getMyActivities(userId: string) {
-  const supabase = await createClient()
+  const supabase = (await createClient()) as any
   const { data } = await supabase
     .from('user_activities')
     .select('category_id')
     .eq('user_id', userId)
-  return (data ?? []).map((a) => a.category_id)
+  return (data ?? []).map((a: any) => a.category_id)
 }
 
 // ─────────────────────────────────────────
 // Get user followed regions
 // ─────────────────────────────────────────
 export async function getMyFollowedRegions(userId: string) {
-  const supabase = await createClient()
+  const supabase = (await createClient()) as any
   const { data } = await supabase
     .from('user_followed_regions')
     .select('region_id')
     .eq('user_id', userId)
-  return (data ?? []).map((r) => r.region_id)
+  return (data ?? []).map((r: any) => r.region_id)
 }
 
 // ─────────────────────────────────────────
 // Get notification settings
 // ─────────────────────────────────────────
 export async function getNotificationSettings(userId: string) {
-  const supabase = await createClient()
+  const supabase = (await createClient()) as any
   const { data } = await supabase
     .from('notification_settings')
     .select('*')
@@ -174,7 +174,7 @@ export async function getNotificationSettings(userId: string) {
 // Count user post stats
 // ─────────────────────────────────────────
 export async function getUserPostStats(userId: string) {
-  const supabase = await createClient()
+  const supabase = (await createClient()) as any
 
   const { count: total } = await supabase
     .from('posts')

@@ -1,0 +1,119 @@
+// src/components/notifications/NotificationItem.tsx
+'use client'
+
+import { useTransition } from 'react'
+import { markNotificationReadAction } from '@/actions/notifications.actions'
+import { formatRelativeTime } from '@/lib/utils/format'
+import type { NotificationRow } from '@/lib/queries/notifications.queries'
+
+// ─── Type badge config ────────────────────────────────────────────────────────
+
+const TYPE_CONFIG: Record<string, { label: string; icon: string; colorClass: string }> = {
+  new_post_region: {
+    label: 'منشور جديد في ولايتك',
+    icon: '📍',
+    colorClass: 'notification-badge--region',
+  },
+  new_post_activity: {
+    label: 'منشور يناسب نشاطك',
+    icon: '🌾',
+    colorClass: 'notification-badge--activity',
+  },
+  platform_update: {
+    label: 'تحديث المنصة',
+    icon: '📢',
+    colorClass: 'notification-badge--platform',
+  },
+}
+
+const DEFAULT_TYPE = {
+  label: 'إشعار',
+  icon: '🔔',
+  colorClass: 'notification-badge--default',
+}
+
+// ─── Component ────────────────────────────────────────────────────────────────
+
+interface Props {
+  notification: NotificationRow
+}
+
+export default function NotificationItem({ notification }: Props) {
+  const [isPending, startTransition] = useTransition()
+  const typeConfig = TYPE_CONFIG[notification.type] ?? DEFAULT_TYPE
+
+  function handleMarkRead() {
+    if (notification.is_read || isPending) return
+    startTransition(async () => {
+      await markNotificationReadAction(notification.id)
+    })
+  }
+
+  return (
+    <div
+      className={`notification-item ${notification.is_read ? 'notification-item--read' : 'notification-item--unread'} ${isPending ? 'notification-item--loading' : ''}`}
+      dir="rtl"
+    >
+      {/* Unread dot */}
+      {!notification.is_read && (
+        <span className="notification-item__dot" aria-hidden="true" />
+      )}
+
+      {/* Icon */}
+      <span className="notification-item__icon" aria-hidden="true">
+        {typeConfig.icon}
+      </span>
+
+      {/* Content */}
+      <div className="notification-item__content">
+        <div className="notification-item__header">
+          <span className={`notification-badge ${typeConfig.colorClass}`}>
+            {typeConfig.label}
+          </span>
+          <time className="notification-item__time" dateTime={notification.created_at}>
+            {formatRelativeTime(notification.created_at)}
+          </time>
+        </div>
+
+        {notification.title && (
+          <p className="notification-item__title">{notification.title}</p>
+        )}
+        {notification.body && (
+          <p className="notification-item__body">{notification.body}</p>
+        )}
+      </div>
+
+      {/* Mark as read button */}
+      {!notification.is_read && (
+        <button
+          className="notification-item__action"
+          onClick={handleMarkRead}
+          disabled={isPending}
+          aria-label="تحديد كمقروء"
+          title="تحديد كمقروء"
+        >
+          {isPending ? (
+            <span className="notification-item__spinner" />
+          ) : (
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 16 16"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1.5" />
+              <path
+                d="M5 8l2 2 4-4"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          )}
+        </button>
+      )}
+    </div>
+  )
+}

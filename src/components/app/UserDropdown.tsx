@@ -10,6 +10,7 @@ import {
   Settings,
   LogOut,
   ChevronDown,
+  Shield,
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { ROUTES, ROLE_LABELS } from '@/lib/utils/constants'
@@ -108,6 +109,14 @@ export default function UserDropdown({ profile }: UserDropdownProps) {
 
             {/* Menu items */}
             <nav className="mt-1.5 px-1.5">
+              {profile.role === 'admin' && (
+                <MenuItem
+                  href="/admin"
+                  icon={<Shield className="h-4 w-4" />}
+                  label="لوحة تحكم الإدارة"
+                  onClick={() => setOpen(false)}
+                />
+              )}
               <MenuItem
                 href={ROUTES.PROFILE_ME}
                 icon={<User className="h-4 w-4" />}

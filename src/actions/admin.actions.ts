@@ -70,9 +70,13 @@ export async function updateCategoryAction(
   const { supabase, adminId } = await getAdminClient()
   if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
+  const updateSchema = categorySchema.partial().extend({ is_active: z.boolean().optional() })
+  const parsed = updateSchema.safeParse(input)
+  if (!parsed.success) return { success: false, error: parsed.error.errors[0].message }
+
   const { error } = await supabase
     .from('categories')
-    .update(input)
+    .update(parsed.data)
     .eq('id', id)
 
   if (error) return { success: false, error: error.message }
@@ -131,10 +135,13 @@ export async function updateUnitAction(
   const { supabase, adminId } = await getAdminClient()
   if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
-  const { error } = await supabase.from('units').update(input).eq('id', id)
+  const parsed = unitSchema.partial().safeParse(input)
+  if (!parsed.success) return { success: false, error: parsed.error.errors[0].message }
+
+  const { error } = await supabase.from('units').update(parsed.data).eq('id', id)
   if (error) return { success: false, error: error.message }
 
-  await logAdminAction(supabase, adminId, 'update_unit', 'unit', id, input)
+  await logAdminAction(supabase, adminId, 'update_unit', 'unit', id, parsed.data)
 
   revalidatePath('/admin/categories')
   return { success: true }
@@ -192,10 +199,26 @@ export async function updateRegionAction(
   const { supabase, adminId } = await getAdminClient()
   if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
-  const { error } = await supabase.from('regions').update(input).eq('id', id)
+  const parsed = regionSchema.partial().safeParse(input)
+  if (!parsed.success) return { success: false, error: parsed.error.errors[0].message }
+
+  const { error } = await supabase.from('regions').update(parsed.data).eq('id', id)
   if (error) return { success: false, error: error.message }
 
-  await logAdminAction(supabase, adminId, 'update_region', null, id, input)
+  await logAdminAction(supabase, adminId, 'update_region', null, id, parsed.data)
+
+  revalidatePath('/admin/categories')
+  return { success: true }
+}
+
+export async function deleteRegionAction(id: string): Promise<ActionResult> {
+  const { supabase, adminId } = await getAdminClient()
+  if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
+
+  const { error } = await supabase.from('regions').delete().eq('id', id)
+  if (error) return { success: false, error: error.message }
+
+  await logAdminAction(supabase, adminId, 'delete_region', null, id)
 
   revalidatePath('/admin/categories')
   return { success: true }
@@ -203,11 +226,15 @@ export async function updateRegionAction(
 
 // ─── User Admin Actions ───────────────────────────────────────────────────────
 
-export async function suspendUserAction(userId: string): Promise<ActionResult> {
+/**
+ * Permanently bans a user by setting deleted_at.
+ * This is a hard ban — use restoreUserAction to reverse it.
+ * Previously misnamed suspendUserAction; renamed for clarity.
+ */
+export async function banUserAction(userId: string): Promise<ActionResult> {
   const { supabase, adminId } = await getAdminClient()
   if (!supabase || !adminId) return { success: false, error: 'غير مصرح لك' }
 
-  // Soft-delete by setting deleted_at
   const { error } = await supabase
     .from('profiles')
     .update({ deleted_at: new Date().toISOString() })
@@ -215,11 +242,14 @@ export async function suspendUserAction(userId: string): Promise<ActionResult> {
 
   if (error) return { success: false, error: error.message }
 
-  await logAdminAction(supabase, adminId, 'suspend_user', 'user', userId)
+  await logAdminAction(supabase, adminId, 'ban_user', 'user', userId)
 
   revalidatePath('/admin/users')
   return { success: true }
 }
+
+/** @deprecated Use banUserAction instead */
+export const suspendUserAction = banUserAction
 
 export async function restoreUserAction(userId: string): Promise<ActionResult> {
   const { supabase, adminId } = await getAdminClient()

@@ -106,12 +106,19 @@ export async function checkUsernameAvailabilityAction(
     data: { user },
   } = await supabase.auth.getUser()
 
-  const { data: existing } = await supabase
+  // Build the uniqueness query — exclude the caller's own row so they can
+  // re-save their current username without a false "taken" result.
+  // When unauthenticated, skip the exclusion entirely (no row to exclude).
+  let query = supabase
     .from('profiles')
     .select('id')
     .eq('username', slug)
-    .neq('id', user?.id ?? '')
-    .maybeSingle()
+
+  if (user) {
+    query = query.neq('id', user.id)
+  }
+
+  const { data: existing } = await query.maybeSingle()
 
   if (existing) {
     // Provide a suggestion

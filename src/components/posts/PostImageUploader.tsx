@@ -31,10 +31,7 @@ interface Props {
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function uid() {
-  return Math.random().toString(36).slice(2)
-}
+// clientId uses uuidv4 — same import already used for storage path generation
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -98,7 +95,7 @@ export default function PostImageUploader({ initialImages = [], onChange }: Prop
           .getPublicUrl(path)
 
         uploaded.push({
-          clientId:     uid(),
+          clientId:     uuidv4(),
           url:          urlData.publicUrl,
           storage_path: path,
           sort_order:   images.length + uploaded.length,

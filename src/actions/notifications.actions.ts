@@ -3,8 +3,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-
-type ActionResult = { success: true } | { success: false; error: string }
+import type { ActionResult } from '@/types/domain'
 
 /**
  * Mark a single notification as read.

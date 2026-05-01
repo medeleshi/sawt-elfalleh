@@ -1,7 +1,7 @@
 // src/app/layout.tsx
 import type { Metadata } from 'next'
 import '@/styles/globals.css'
-import { APP_NAME, APP_DESCRIPTION } from '@/lib/utils/constants'
+import { APP_NAME, APP_DESCRIPTION, APP_URL } from '@/lib/utils/constants'
 import { Toaster } from '@/components/shared/Toast'
 
 export const metadata: Metadata = {
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: `%s | ${APP_NAME}`,
   },
   description: APP_DESCRIPTION,
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
+  metadataBase: new URL(APP_URL),
   openGraph: {
     type: 'website',
     locale: 'ar_TN',

@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import type { ActionResult } from '@/types/domain'
 import { logAdminAction } from '@/lib/actions/admin-logs'
+import { sendNotification } from '@/lib/actions/send-notification'
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>
 
@@ -168,6 +169,14 @@ export async function updateReportStatusAction(input: {
     return { success: false, error: 'غير مصرح لك بهذا الإجراء' }
   }
 
+  // Fetch reporter BEFORE the update so their data is always available regardless of
+  // any future RLS changes that might hide reviewed/dismissed reports
+  const { data: report } = await ((supabase
+    .from('reports') as any)
+    .select('reporter_id')
+    .eq('id', input.report_id)
+    .maybeSingle() as any)
+
   const { error } = await ((supabase
     .from('reports') as any)
     .update({
@@ -183,6 +192,19 @@ export async function updateReportStatusAction(input: {
   // @ts-expect-error - db.ts generic inference limitation
   await logAdminAction(supabase, adminId, 'update_report_status', 'report', input.report_id, input)
 
+  if (report?.reporter_id) {
+    const isReviewed = input.status === 'reviewed'
+    await sendNotification(supabase as any, {
+      userId: report.reporter_id,
+      type: isReviewed ? 'report_reviewed' : 'report_dismissed',
+      title: isReviewed ? 'تمت مراجعة بلاغك' : 'تم رفض بلاغك',
+      body: isReviewed
+        ? 'شكراً لمساهمتك. تمت مراجعة بلاغك واتخاذ الإجراء المناسب.'
+        : 'تمت مراجعة بلاغك وقررت الإدارة عدم اتخاذ إجراء في الوقت الحالي.',
+      data: { report_id: input.report_id },
+    })
+  }
+
   revalidatePath('/admin/reports')
   return { success: true }
 }
@@ -192,6 +214,13 @@ export async function suspendPostAction(postId: string): Promise<ActionResult> {
   if (!ok || !supabase || !adminId) {
     return { success: false, error: 'غير مصرح لك بهذا الإجراء' }
   }
+
+  // Fetch owner data BEFORE the update so RLS on suspended posts cannot block the read
+  const { data: targetPost } = await ((supabase
+    .from('posts') as any)
+    .select('user_id, title')
+    .eq('id', postId)
+    .maybeSingle() as any)
 
   const { error } = await ((supabase
     .from('posts') as any)
@@ -205,6 +234,18 @@ export async function suspendPostAction(postId: string): Promise<ActionResult> {
   // @ts-expect-error - db.ts generic inference limitation
   await logAdminAction(supabase, adminId, 'suspend_post', 'post', postId)
 
+  if (targetPost?.user_id) {
+    await sendNotification(supabase as any, {
+      userId: targetPost.user_id,
+      type: 'post_suspended',
+      title: 'تم إيقاف إعلانك',
+      body: targetPost.title
+        ? `تم إيقاف إعلانك "${targetPost.title}" من قِبَل الإدارة بسبب مخالفة سياسة الاستخدام.`
+        : 'تم إيقاف أحد إعلاناتك من قِبَل الإدارة.',
+      data: { post_id: postId, admin_id: adminId },
+    })
+  }
+
   revalidatePath('/admin/posts')
   revalidatePath('/admin/reports')
   return { success: true }
@@ -215,6 +256,13 @@ export async function restorePostAction(postId: string): Promise<ActionResult> {
   if (!ok || !supabase || !adminId) {
     return { success: false, error: 'غير مصرح لك بهذا الإجراء' }
   }
+
+  // Fetch owner data BEFORE the update to guarantee data is available post-status-change
+  const { data: restoredPost } = await ((supabase
+    .from('posts') as any)
+    .select('user_id, title')
+    .eq('id', postId)
+    .maybeSingle() as any)
 
   const { error } = await ((supabase
     .from('posts') as any)
@@ -227,6 +275,18 @@ export async function restorePostAction(postId: string): Promise<ActionResult> {
 
   // @ts-expect-error - db.ts generic inference limitation
   await logAdminAction(supabase, adminId, 'restore_post', 'post', postId)
+
+  if (restoredPost?.user_id) {
+    await sendNotification(supabase as any, {
+      userId: restoredPost.user_id,
+      type: 'post_restored',
+      title: 'تمت استعادة إعلانك',
+      body: restoredPost.title
+        ? `تمت استعادة إعلانك "${restoredPost.title}" وأصبح مرئياً مجدداً.`
+        : 'تمت استعادة أحد إعلاناتك وأصبح مرئياً مجدداً.',
+      data: { post_id: postId, admin_id: adminId },
+    })
+  }
 
   revalidatePath('/admin/posts')
   return { success: true }

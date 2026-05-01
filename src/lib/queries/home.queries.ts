@@ -231,27 +231,32 @@ export async function getUnifiedHomeFeed(userId: string | null): Promise<HomeFee
   let followedRegionPosts = filterNew(followedRaw)
   let latestPosts = filterNew(latestRaw)
 
-  // 2. Filling logic: If a section has < limit, fill it from the remaining latestRaw
-  // that haven't been added to any section yet.
+  // 2. Filling logic: If a section has < limit, fill from latestRaw posts
+  // not yet assigned to any section. Uses a shared cursor (let) captured by
+  // the fillSection closure — each call advances it, so sections draw from the
+  // pool in order without overlap. Do NOT run fillSection calls in parallel.
+  let latestCursor = 0
+
   const fillSection = (current: PostWithDetails[]) => {
     if (current.length >= limit) return current.slice(0, limit)
-    
-    // Take from latestPosts (which are already filtered and unique)
-    const needed = limit - current.length
-    const pool = latestPosts.splice(0, needed) 
-    return [...current, ...pool]
+    const result = [...current]
+    while (result.length < limit && latestCursor < latestPosts.length) {
+      result.push(latestPosts[latestCursor])
+      latestCursor++
+    }
+    return result
   }
 
   // We fill specialized sections first
   regionPosts = fillSection(regionPosts)
   activityPosts = fillSection(activityPosts)
   followedRegionPosts = fillSection(followedRegionPosts)
-  
-  // What's left in latestPosts stays in its section
+
+  // What's left in latestPosts (from the cursor onwards) stays in its section
   return {
     regionPosts,
     activityPosts,
     followedRegionPosts,
-    latestPosts: latestPosts.slice(0, limit)
+    latestPosts: latestPosts.slice(latestCursor, latestCursor + limit),
   }
 }

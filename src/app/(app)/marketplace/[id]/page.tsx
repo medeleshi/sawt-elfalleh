@@ -76,8 +76,8 @@ export default async function PostDetailsPage({
     post.id
   )
 
-  // Record view — fire and forget (non-blocking)
-  recordPostView(post.id, currentUserId)
+  // Record view — awaited so it completes within the server render lifecycle
+  await recordPostView(post.id, currentUserId)
 
   const isSell = post.type === 'sell'
   const isExpired = post.status !== 'active'

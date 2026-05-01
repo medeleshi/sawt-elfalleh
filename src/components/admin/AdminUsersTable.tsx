@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { suspendUserAction, restoreUserAction } from '@/actions/admin.actions'
+import { banUserAction, restoreUserAction } from '@/actions/admin.actions'
 import { ROLE_LABELS } from '@/lib/utils/constants'
 import { Ban, RotateCcw, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
@@ -37,7 +37,7 @@ export default function AdminUsersTable({ users: initialUsers }: Props) {
   const runAction = (
     userId: string,
     action: () => Promise<{ success: boolean; error?: string }>,
-    suspended: boolean
+    banned: boolean
   ) => {
     setActionId(userId)
     startTransition(async () => {
@@ -46,7 +46,7 @@ export default function AdminUsersTable({ users: initialUsers }: Props) {
         setUsers((prev) =>
           prev.map((u) =>
             u.id === userId
-              ? { ...u, deleted_at: suspended ? new Date().toISOString() : null }
+              ? { ...u, deleted_at: banned ? new Date().toISOString() : null }
               : u
           )
         )
@@ -81,12 +81,12 @@ export default function AdminUsersTable({ users: initialUsers }: Props) {
           <tbody className="divide-y divide-stone-100">
             {users.map((user) => {
               const isLoading = isPending && actionId === user.id
-              const isSuspended = !!user.deleted_at
+              const isBanned = !!user.deleted_at
 
               return (
                 <tr
                   key={user.id}
-                  className={`hover:bg-stone-50 transition-colors ${isSuspended ? 'opacity-60' : ''}`}
+                  className={`hover:bg-stone-50 transition-colors ${isBanned ? 'opacity-60' : ''}`}
                 >
                   {/* Name */}
                   <td className="px-4 py-3">
@@ -122,11 +122,11 @@ export default function AdminUsersTable({ users: initialUsers }: Props) {
                   {/* Status */}
                   <td className="px-4 py-3">
                     <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                      isSuspended
+                      isBanned
                         ? 'bg-red-100 text-red-600'
                         : 'bg-green-100 text-green-700'
                     }`}>
-                      {isSuspended ? 'موقوف' : 'نشط'}
+                      {isBanned ? 'محظور' : 'نشط'}
                     </span>
                   </td>
 
@@ -142,20 +142,20 @@ export default function AdminUsersTable({ users: initialUsers }: Props) {
                         <ExternalLink className="w-4 h-4" />
                       </Link>
 
-                      {!isSuspended && user.role !== 'admin' && (
+                      {!isBanned && user.role !== 'admin' && (
                         <button
                           onClick={() =>
-                            runAction(user.id, () => suspendUserAction(user.id), true)
+                            runAction(user.id, () => banUserAction(user.id), true)
                           }
                           disabled={isLoading}
                           className="p-1.5 rounded hover:bg-red-50 text-stone-400 hover:text-red-600 transition-colors disabled:opacity-40"
-                          title="إيقاف الحساب"
+                          title="حظر الحساب"
                         >
                           <Ban className="w-4 h-4" />
                         </button>
                       )}
 
-                      {isSuspended && (
+                      {isBanned && (
                         <button
                           onClick={() =>
                             runAction(user.id, () => restoreUserAction(user.id), false)

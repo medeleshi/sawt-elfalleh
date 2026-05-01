@@ -6,7 +6,15 @@
 export const APP_NAME = 'صوت الفلاح'
 export const APP_NAME_LATIN = 'Sawt ElFalleh'
 export const APP_DESCRIPTION = 'السوق الفلاحي التونسي'
-export const APP_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+const getBaseUrl = () => {
+  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL
+  if (process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.NEXT_PUBLIC_VERCEL_PROJECT_PRODUCTION_URL}`
+  if (process.env.NEXT_PUBLIC_VERCEL_URL) return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`
+  return 'http://localhost:3000'
+}
+
+export const APP_URL = getBaseUrl()
 
 // ─── Limits (must match DB triggers exactly) ──────────────────────────────────
 export const MAX_ACTIVITIES = 5

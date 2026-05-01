@@ -9,9 +9,15 @@ import type { NotificationRow } from '@/lib/queries/notifications.queries'
 // ─── Type badge config ────────────────────────────────────────────────────────
 
 const TYPE_CONFIG: Record<string, { label: string; icon: string; colorClass: string }> = {
+  // ─── Feed ──────────────────────────────────────────────────────────────────
   new_post_region: {
     label: 'منشور جديد في ولايتك',
     icon: '📍',
+    colorClass: 'notification-badge--region',
+  },
+  new_post_followed_region: {
+    label: 'منشور في ولاية تتابعها',
+    icon: '🗺️',
     colorClass: 'notification-badge--region',
   },
   new_post_activity: {
@@ -23,6 +29,64 @@ const TYPE_CONFIG: Record<string, { label: string; icon: string; colorClass: str
     label: 'تحديث المنصة',
     icon: '📢',
     colorClass: 'notification-badge--platform',
+  },
+
+  // ─── Social / marketplace ──────────────────────────────────────────────────
+  post_contact: {
+    label: 'طلب تواصل',
+    icon: '📞',
+    colorClass: 'notification-badge--contact',
+  },
+  post_saved: {
+    label: 'حفظ إعلان',
+    icon: '🔖',
+    colorClass: 'notification-badge--saved',
+  },
+
+  // ─── Admin → user ──────────────────────────────────────────────────────────
+  post_suspended: {
+    label: 'إعلان موقوف',
+    icon: '⛔',
+    colorClass: 'notification-badge--warning',
+  },
+  post_restored: {
+    label: 'إعلان مستعاد',
+    icon: '✅',
+    colorClass: 'notification-badge--success',
+  },
+  post_expired_admin: {
+    label: 'إعلان منتهي الصلاحية',
+    icon: '⏰',
+    colorClass: 'notification-badge--warning',
+  },
+  user_banned: {
+    label: 'حساب موقوف',
+    icon: '🚫',
+    colorClass: 'notification-badge--danger',
+  },
+  user_restored: {
+    label: 'حساب مستعاد',
+    icon: '✅',
+    colorClass: 'notification-badge--success',
+  },
+
+  // ─── Reports ───────────────────────────────────────────────────────────────
+  report_reviewed: {
+    label: 'بلاغ تمت مراجعته',
+    icon: '🔍',
+    colorClass: 'notification-badge--info',
+  },
+  report_dismissed: {
+    label: 'بلاغ مرفوض',
+    icon: '📋',
+    colorClass: 'notification-badge--default',
+  },
+
+  // ─── System / lifecycle ────────────────────────────────────────────────────
+  post_expired: {
+    label: 'إعلان منتهي الصلاحية',
+    icon: '⏰',
+    colorClass: 'notification-badge--warning',
   },
 }
 

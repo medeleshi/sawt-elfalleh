@@ -12,22 +12,22 @@ export async function getAdminStats() {
     { count: totalUsers },
     { count: pendingReports },
   ] = await Promise.all([
-    supabase.from('posts').select('*', { count: 'exact', head: true }),
+    supabase.from('posts').select('id', { count: 'exact', head: true }),
     supabase
       .from('posts')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('status', 'active'),
     supabase
       .from('posts')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('status', 'suspended'),
     supabase
       .from('profiles')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .is('deleted_at', null),
     supabase
       .from('reports')
-      .select('*', { count: 'exact', head: true })
+      .select('id', { count: 'exact', head: true })
       .eq('status', 'pending'),
   ])
 

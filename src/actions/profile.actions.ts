@@ -8,8 +8,7 @@ import {
   updateNotificationSettingsSchema,
   UpdateNotificationSettingsInput,
 } from '@/lib/validators/profile.schema'
-
-type ActionResult = { success: true } | { success: false; error: string }
+import type { ActionResult } from '@/types/domain'
 
 // ─────────────────────────────────────────
 // Update Profile Action
@@ -55,8 +54,11 @@ export async function updateProfileAction(
 
   // Update activities if provided
   if (activity_ids !== undefined) {
-    // Delete all existing activities
-    await supabase.from('user_activities').delete().eq('user_id', user.id)
+    // Delete all existing activities — error checked to prevent silent partial updates
+    const { error: deleteActError } = await supabase.from('user_activities').delete().eq('user_id', user.id)
+    if (deleteActError) {
+      return { success: false, error: 'تعذّر تحديث الأنشطة' }
+    }
 
     // Insert new ones
     if (activity_ids.length > 0) {
@@ -74,10 +76,14 @@ export async function updateProfileAction(
 
   // Update followed regions if provided
   if (followed_region_ids !== undefined) {
-    await supabase
+    // Delete all existing followed regions — error checked to prevent silent partial updates
+    const { error: deleteRegError } = await supabase
       .from('user_followed_regions')
       .delete()
       .eq('user_id', user.id)
+    if (deleteRegError) {
+      return { success: false, error: 'تعذّر تحديث الولايات' }
+    }
 
     if (followed_region_ids.length > 0) {
       const { error: regError } = await supabase

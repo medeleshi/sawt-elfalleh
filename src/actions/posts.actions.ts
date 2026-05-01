@@ -6,8 +6,19 @@ import { createClient } from '@/lib/supabase/server'
 import { postSchema, postImageItemSchema } from '@/lib/validators/post.schema'
 import { ROUTES, POST_EXPIRY_DAYS, STORAGE_BUCKETS } from '@/lib/utils/constants'
 import type { ActionResult } from '@/types/domain'
+import { sendNotification, sendNotificationBulk } from '@/lib/actions/send-notification'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * Supabase returns 1-to-1 joined rows as an array when joining from the parent.
+ * This normalises `notification_settings` so callers always get a plain object.
+ */
+function normalizeSettings(raw: unknown): Record<string, unknown> | null {
+  if (!raw) return null
+  if (Array.isArray(raw)) return (raw[0] as Record<string, unknown>) ?? null
+  return raw as Record<string, unknown>
+}
 
 /** Verify the caller is authenticated and return their profile. */
 async function getAuthedProfile() {
@@ -130,6 +141,90 @@ export async function createPostAction(
     }
   }
 
+  // ─── Fan-out: notify users interested in this post ──────────────────────────
+  try {
+    const postCategoryId = data.category_id
+    const postRegionId   = data.region_id
+
+    // 1) Users whose HOME region matches the post region
+    // notification_settings is 1-to-1 with profiles, but Supabase embeds it as an
+    // array when joining from the parent side — access index [0] to read the object.
+    const { data: regionFollowers } = await (supabase
+      .from('profiles')
+      .select('id, notification_settings(new_post_region)')
+      .eq('region_id', postRegionId)
+      .neq('id', user.id) as any)
+
+    const regionNotifs = (regionFollowers ?? [])
+      .filter((p: any) => {
+        const s = normalizeSettings(p.notification_settings)
+        return s?.new_post_region !== false
+      })
+      .map((p: any) => ({
+        userId: p.id,
+        type: 'new_post_region' as const,
+        title: 'منشور جديد في ولايتك',
+        body: data.title,
+        data: { post_id: post.id, category_id: postCategoryId, region_id: postRegionId },
+      }))
+
+    // 2) Users who FOLLOW this post's region (different type so UI can differentiate)
+    const { data: followedRegionUsers } = await (supabase
+      .from('user_followed_regions')
+      .select('user_id, profiles!inner(notification_settings(new_post_region))')
+      .eq('region_id', postRegionId)
+      .neq('user_id', user.id) as any)
+
+    const followedRegionNotifs = (followedRegionUsers ?? [])
+      .filter((r: any) => {
+        const s = normalizeSettings(r.profiles?.notification_settings)
+        return s?.new_post_region !== false
+      })
+      .map((r: any) => ({
+        userId: r.user_id,
+        type: 'new_post_followed_region' as const,
+        title: 'منشور جديد في ولاية تتابعها',
+        body: data.title,
+        data: { post_id: post.id, category_id: postCategoryId, region_id: postRegionId },
+      }))
+
+    // 3) Users whose activity matches this post's category
+    const { data: activityUsers } = await (supabase
+      .from('user_activities')
+      .select('user_id, profiles!inner(notification_settings(new_post_activity))')
+      .eq('category_id', postCategoryId)
+      .neq('user_id', user.id) as any)
+
+    const activityNotifs = (activityUsers ?? [])
+      .filter((a: any) => {
+        const s = normalizeSettings(a.profiles?.notification_settings)
+        return s?.new_post_activity !== false
+      })
+      .map((a: any) => ({
+        userId: a.user_id,
+        type: 'new_post_activity' as const,
+        title: 'منشور يناسب نشاطك',
+        body: data.title,
+        data: { post_id: post.id, category_id: postCategoryId, region_id: postRegionId },
+      }))
+
+    // Deduplicate: a user might appear in multiple buckets — keep first occurrence
+    const seen = new Set<string>()
+    const allNotifs = [...regionNotifs, ...followedRegionNotifs, ...activityNotifs].filter((n) => {
+      if (seen.has(n.userId)) return false
+      seen.add(n.userId)
+      return true
+    })
+
+    if (allNotifs.length > 0) {
+      await sendNotificationBulk(supabase as any, allNotifs)
+    }
+  } catch (err) {
+    // Fan-out failure must never block post creation
+    console.error('[createPostAction] fan-out notification error:', err)
+  }
+  // ─────────────────────────────────────────────────────────────────────────────
+
   revalidatePath(ROUTES.HOME)
   revalidatePath(ROUTES.MARKETPLACE)
   revalidatePath(ROUTES.PROFILE_ME)
@@ -219,7 +314,11 @@ export async function updatePostAction(
   const images = parseImages(formData.get('images'))
 
   // Delete old image records (Storage files already managed client-side)
-  await supabase.from('post_images').delete().eq('post_id', postId)
+  const { error: deleteImgError } = await supabase.from('post_images').delete().eq('post_id', postId)
+  if (deleteImgError) {
+    console.error('[updatePostAction] image delete error:', deleteImgError)
+    return { success: false, error: 'حدث خطأ أثناء تحديث صور الإعلان' }
+  }
 
   if (images.length > 0) {
     const imageRows = images.map((img: any, idx: number) => ({
@@ -255,6 +354,13 @@ export async function deletePostAction(postId: string): Promise<ActionResult> {
     return { success: false, error: 'يجب تسجيل الدخول أولاً' }
   }
 
+  // Fetch image storage paths BEFORE soft-deleting so future RLS policies
+  // on deleted posts cannot block the read and cause storage leaks.
+  const { data: images } = await supabase
+    .from('post_images')
+    .select('storage_path')
+    .eq('post_id', postId)
+
   // Soft delete — set status = deleted
   const { error } = await ((supabase.from('posts') as any)
     .update({ status: 'deleted' })
@@ -265,14 +371,7 @@ export async function deletePostAction(postId: string): Promise<ActionResult> {
     return { success: false, error: 'حدث خطأ أثناء حذف الإعلان' }
   }
 
-  // Soft delete is done, now optionally cleanup storage if we want to be strict.
-  // For MVP, we usually keep them or handle via a background cron.
-  // But per requirements, let's implement the cleanup of images.
-  const { data: images } = await supabase
-    .from('post_images')
-    .select('storage_path')
-    .eq('post_id', postId)
-
+  // Clean up storage files now that the soft-delete succeeded.
   if (images && images.length > 0) {
     const paths = (images as any[]).map(img => img.storage_path).filter(Boolean) as string[]
     if (paths.length > 0) {
@@ -359,6 +458,43 @@ export async function toggleSavePostAction(postId: string): Promise<ActionResult
       .insert({ user_id: user.id, post_id: postId })
 
     if (error) return { success: false, error: 'حدث خطأ أثناء حفظ الإعلان' }
+
+    // Notify the post owner (non-blocking)
+    try {
+      const { data: savedPost } = await (supabase
+        .from('posts')
+        .select('user_id, title')
+        .eq('id', postId)
+        .single() as any)
+
+      const ownerId = savedPost?.user_id
+
+      if (ownerId && ownerId !== user.id) {
+        // Check owner's notification preferences
+        const { data: notifSettings } = await (supabase
+          .from('notification_settings')
+          .select('post_saved')
+          .eq('user_id', ownerId)
+          .maybeSingle() as any)
+
+        // Respect the `post_saved` preference (defaults to enabled if row absent)
+        const notifyEnabled = !notifSettings || notifSettings.post_saved !== false
+
+        if (notifyEnabled) {
+          await sendNotification(supabase as any, {
+            userId: ownerId,
+            type: 'post_saved',
+            title: 'أضاف شخص ما إعلانك إلى المحفوظات',
+            body: savedPost?.title
+              ? `قام شخص ما بحفظ إعلانك "${savedPost.title}".`
+              : 'قام شخص ما بحفظ أحد إعلاناتك.',
+            data: { post_id: postId, saver_id: user.id },
+          })
+        }
+      }
+    } catch {
+      // Notification is non-critical — ignore errors
+    }
 
     revalidatePath(ROUTES.PROFILE_ME)
     return { success: true, data: { isSaved: true } }

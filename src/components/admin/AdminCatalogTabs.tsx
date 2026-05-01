@@ -372,7 +372,11 @@ function UnitsTab({ units: initial }: { units: Unit[] }) {
   )
 }
 
-// ─── Regions Tab (read-only — seeded from Tunisia data) ───────────────────────
+// ─── Regions Tab ─────────────────────────────────────────────────────────────
+// Regions are seeded from official Tunisian governorate data and are intentionally
+// read-only in the UI. deleteRegionAction and updateRegionAction exist for use via
+// direct API/script only. If region management is ever needed in the UI, wire them
+// up here following the same pattern as CategoriesTab.
 
 function RegionsTab({ regions }: { regions: Region[] }) {
   return (

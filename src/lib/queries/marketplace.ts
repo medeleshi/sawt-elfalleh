@@ -1,9 +1,10 @@
 // src/lib/queries/marketplace.ts
 
 import { createClient } from '@/lib/supabase/server';
+import { MARKETPLACE_PAGE_SIZE } from '@/lib/utils/constants';
 import type { MarketplaceFilters, PostCard, PaginationInfo, Category, Region, Unit } from '@/types/marketplace';
 
-const PAGE_LIMIT = 12;
+const PAGE_LIMIT = MARKETPLACE_PAGE_SIZE;
 
 export async function getMarketplacePosts(filters: MarketplaceFilters): Promise<{
   posts: PostCard[];

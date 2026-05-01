@@ -1,4 +1,6 @@
 // src/lib/queries/post-details.queries.ts
+// Canonical module for post detail page queries.
+// post-details.ts has been removed — all functions live here.
 
 import { createClient } from '@/lib/supabase/server'
 import type { PostWithDetails } from '@/types/domain'
@@ -72,7 +74,8 @@ export async function getPostById(postId: string): Promise<PostWithDetails | nul
 export async function getSimilarPosts(
   categoryId: string,
   regionId: string,
-  excludePostId: string
+  excludePostId: string,
+  limit = 8
 ) {
   const supabase = await createClient()
 
@@ -97,10 +100,19 @@ export async function getSimilarPosts(
     .eq('region_id', regionId)
     .neq('id', excludePostId)
     .order('created_at', { ascending: false })
-    .limit(8) as any)
+    .limit(limit) as any)
 
   if (error) return []
-  return (data ?? []) as any[]
+
+  // Sort images per post
+  const posts = (data ?? []) as any[]
+  posts.forEach((p) => {
+    if (p.post_images) {
+      p.post_images.sort((a: any, b: any) => a.sort_order - b.sort_order)
+    }
+  })
+
+  return posts
 }
 
 // ─── Current viewer session ───────────────────────────────────────────────────

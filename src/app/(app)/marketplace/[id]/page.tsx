@@ -33,15 +33,34 @@ export async function generateMetadata({
   const region = (post as any).region?.name_ar ?? ''
   const price = post.price > 0 ? formatPrice(post.price) : 'سعر قابل للتفاوض'
 
+  const imageUrl = (post as any).post_images?.[0]?.url
+  const description = post.description?.slice(0, 140) ?? post.title
+
   return {
     title: `${post.title} — ${category} في ${region} | صوت الفلاح`,
-    description: `${post.description?.slice(0, 140) ?? post.title} — السعر: ${price}`,
+    description: `${description} — السعر: ${price}`,
     openGraph: {
       title: post.title,
-      description: post.description ?? post.title,
-      images: (post as any).post_images?.[0]?.url
-        ? [{ url: (post as any).post_images[0].url }]
+      description: description,
+      url: `/marketplace/${post.id}`, // resolved against metadataBase
+      type: 'website',
+      siteName: 'صوت الفلاح',
+      images: imageUrl
+        ? [
+            {
+              url: imageUrl,
+              width: 1200,
+              height: 630,
+              alt: post.title,
+            },
+          ]
         : [],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description: description,
+      images: imageUrl ? [imageUrl] : [],
     },
   }
 }

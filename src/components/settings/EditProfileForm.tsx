@@ -2,8 +2,8 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { updateProfileAction } from '@/actions/profile.actions'
-import { Check } from 'lucide-react'
+import { updateProfileAction, togglePhoneVisibilityAction } from '@/actions/profile.actions'
+import { Check, Loader2 } from 'lucide-react'
 
 interface Profile {
   full_name: string
@@ -12,6 +12,7 @@ interface Profile {
   city: string
   region_id: string
   avatar_url: string
+  show_phone: boolean
 }
 
 interface Region {
@@ -55,6 +56,8 @@ export default function EditProfileForm({
     useState<string[]>(activityIds)
   const [selectedRegions, setSelectedRegions] =
     useState<string[]>(followedRegionIds)
+  const [showPhone, setShowPhone] = useState(profile.show_phone)
+  const [isTogglingPhone, setIsTogglingPhone] = useState(false)
 
   const toggleActivity = (id: string) => {
     setSelectedActivities((prev) => {
@@ -70,6 +73,21 @@ export default function EditProfileForm({
       if (prev.length >= 5) return prev // max 5
       return [...prev, id]
     })
+  }
+
+  const handleTogglePhone = async () => {
+    const newValue = !showPhone
+    setIsTogglingPhone(true)
+    try {
+      const result = await togglePhoneVisibilityAction(newValue)
+      if (result.success) {
+        setShowPhone(newValue)
+      } else {
+        setError(result.error)
+      }
+    } finally {
+      setIsTogglingPhone(false)
+    }
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -158,6 +176,32 @@ export default function EditProfileForm({
               placeholder="+216 XX XXX XXX"
               dir="ltr"
             />
+          </div>
+
+          {/* Show Phone Toggle */}
+          <div className="flex items-center justify-between p-3 bg-stone-50 rounded-xl border border-stone-100">
+            <div>
+              <p className="text-sm font-semibold text-stone-700">إظهار رقم الهاتف</p>
+              <p className="text-xs text-stone-500">السماح للمستخدمين برؤية رقمك في إعلاناتك</p>
+            </div>
+            <button
+              type="button"
+              onClick={handleTogglePhone}
+              disabled={isTogglingPhone}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                showPhone ? 'bg-green-600' : 'bg-stone-200'
+              } ${isTogglingPhone ? 'opacity-50 cursor-wait' : ''}`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  showPhone ? (document.dir === 'rtl' ? '-translate-x-5' : 'translate-x-5') : 'translate-x-0'
+                }`}
+              >
+                {isTogglingPhone && (
+                  <Loader2 className="w-3 h-3 text-stone-400 animate-spin absolute inset-0 m-auto" />
+                )}
+              </span>
+            </button>
           </div>
         </div>
       </section>

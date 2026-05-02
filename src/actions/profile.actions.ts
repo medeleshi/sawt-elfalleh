@@ -107,6 +107,40 @@ export async function updateProfileAction(
 }
 
 // ─────────────────────────────────────────
+// Toggle Phone Visibility Action
+// ─────────────────────────────────────────
+export async function togglePhoneVisibilityAction(
+  show_phone: boolean
+): Promise<ActionResult> {
+  const supabase = (await createClient()) as any
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { success: false, error: 'غير مصرح لك بهذا الإجراء' }
+  }
+
+  const { error } = await supabase
+    .from('profiles')
+    .update({
+      show_phone,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', user.id)
+
+  if (error) {
+    console.error('Phone visibility update error:', error)
+    return { success: false, error: 'حدث خطأ أثناء تحديث خصوصية الهاتف' }
+  }
+
+  revalidatePath('/settings/profile')
+  revalidatePath('/profile/me')
+
+  return { success: true }
+}
+
+// ─────────────────────────────────────────
 // Update Notification Settings Action
 // ─────────────────────────────────────────
 export async function updateNotificationSettingsAction(

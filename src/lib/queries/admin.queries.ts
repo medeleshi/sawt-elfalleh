@@ -55,7 +55,7 @@ export async function getAdminPosts(options: {
     .from('posts')
     .select(
       `
-      id, title, type, status, price, created_at, city,
+      id, title, type, status, price, created_at, city, reports_count,
       profiles:user_id ( id, full_name, username, role ),
       categories:category_id ( name_ar, icon ),
       regions:region_id ( name_ar )

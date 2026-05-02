@@ -21,6 +21,7 @@ interface Post {
   profiles: { id: string; full_name: string; username: string | null; role: string } | null
   categories: { name_ar: string; icon: string | null } | null
   regions: { name_ar: string } | null
+  reports_count?: number
 }
 
 interface Props {
@@ -82,6 +83,7 @@ export default function AdminPostsTable({ posts: initialPosts }: Props) {
               <th className="px-4 py-3 text-xs font-semibold text-stone-500 uppercase">الحالة</th>
               <th className="px-4 py-3 text-xs font-semibold text-stone-500 uppercase">السعر</th>
               <th className="px-4 py-3 text-xs font-semibold text-stone-500 uppercase">التاريخ</th>
+              <th className="px-4 py-3 text-xs font-semibold text-stone-500 uppercase">البلاغات</th>
               <th className="px-4 py-3 text-xs font-semibold text-stone-500 uppercase">إجراءات</th>
             </tr>
           </thead>
@@ -143,9 +145,13 @@ export default function AdminPostsTable({ posts: initialPosts }: Props) {
                       : '—'}
                   </td>
 
-                  {/* Date */}
-                  <td className="px-4 py-3 text-stone-400 text-xs whitespace-nowrap">
-                    {new Date(post.created_at).toLocaleDateString('ar-TN')}
+                  {/* Reports */}
+                  <td className="px-4 py-3">
+                    <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                      (post.reports_count ?? 0) > 0 ? 'bg-orange-100 text-orange-700' : 'bg-stone-100 text-stone-500'
+                    }`}>
+                      {post.reports_count ?? 0}
+                    </span>
                   </td>
 
                   {/* Actions */}

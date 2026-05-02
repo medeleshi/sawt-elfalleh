@@ -5,6 +5,7 @@ import { z } from 'zod'
 import { createClient } from '@/lib/supabase/server'
 import type { ActionResult } from '@/types/domain'
 import { logAdminAction } from '@/lib/actions/admin-logs'
+import { sendNotification } from '@/lib/actions/send-notification'
 
 // ─── Admin guard ──────────────────────────────────────────────────────────────
 
@@ -243,6 +244,14 @@ export async function banUserAction(userId: string): Promise<ActionResult> {
 
   await logAdminAction(supabase, adminId, 'ban_user', 'user', userId)
 
+  // Send in-app notification to the user
+  await sendNotification(supabase, {
+    userId,
+    type: 'user_banned',
+    title: 'تم تجميد حسابك',
+    body: 'لقد تم تجميد حسابك من قبل الإدارة لمراجعة النشاط. يمكنك التواصل مع الدعم لمزيد من المعلومات.',
+  })
+
   revalidatePath('/admin/users')
   return { success: true }
 }
@@ -262,6 +271,14 @@ export async function restoreUserAction(userId: string): Promise<ActionResult> {
   if (error) return { success: false, error: error.message }
 
   await logAdminAction(supabase, adminId, 'restore_user', 'user', userId)
+
+  // Send in-app notification to the user
+  await sendNotification(supabase, {
+    userId,
+    type: 'user_restored',
+    title: 'تم تفعيل حسابك',
+    body: 'مرحباً بك مجدداً! لقد تم تفعيل حسابك ويمكنك الآن استخدام جميع خدمات صوت الفلاح.',
+  })
 
   revalidatePath('/admin/users')
   return { success: true }

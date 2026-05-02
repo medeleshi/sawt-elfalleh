@@ -16,6 +16,7 @@ interface User {
   created_at: string
   status: 'active' | 'suspended'
   regions: { name_ar: string } | null
+  reports_count?: number
 }
 
 interface Props {
@@ -74,7 +75,8 @@ export default function AdminUsersTable({ users: initialUsers }: Props) {
               <th className="px-4 py-3 text-xs font-semibold text-stone-500 uppercase">الولاية</th>
               <th className="px-4 py-3 text-xs font-semibold text-stone-500 uppercase">الهاتف</th>
               <th className="px-4 py-3 text-xs font-semibold text-stone-500 uppercase">تاريخ التسجيل</th>
-              <th className="px-4 py-3 text-xs font-semibold text-stone-500 uppercase">الحالة</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">البلاغات</th>
+              <th className="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">الحالة</th>
               <th className="px-4 py-3 text-xs font-semibold text-stone-500 uppercase">إجراءات</th>
             </tr>
           </thead>

@@ -89,7 +89,7 @@ export async function getAdminUsers(options: {
     .from('profiles')
     .select(
       `
-      id, full_name, username, role, phone, city, created_at, status,
+      id, full_name, username, role, phone, city, created_at, status, reports_count,
       regions:region_id ( name_ar )
     `,
       { count: 'exact' }

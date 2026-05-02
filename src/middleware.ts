@@ -1,6 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
 import { createMiddlewareClient } from '@/lib/supabase/middleware'
 import { ROUTES } from '@/lib/utils/constants'
+import type { Database } from '@/types/db'
 
 /**
  * Route protection middleware.

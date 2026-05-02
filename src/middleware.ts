@@ -146,21 +146,25 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── User is authenticated — fetch minimal profile data ────────────────────
+  // We fetch status separately or handle failure to ensure missing column doesn't break login
   const { data: profile, error: profileError } = await (supabase
     .from('profiles')
     .select('role, is_profile_completed, status')
     .eq('id', user.id)
     .single() as any)
 
-  // Fallback: if 'status' column doesn't exist yet, fetch basic data to prevent redirect loops
   let safeProfile = profile
-  if (profileError && profileError.message?.includes('status')) {
-    const { data: fallback } = await (supabase
+  
+  // If the query failed (likely due to missing 'status' column), try fetching without it
+  if (!profile || profileError) {
+    const { data: retryData } = await (supabase
       .from('profiles')
       .select('role, is_profile_completed')
       .eq('id', user.id)
       .single() as any)
-    safeProfile = fallback
+    if (retryData) {
+      safeProfile = retryData
+    }
   }
 
   const isComplete = safeProfile?.is_profile_completed === true

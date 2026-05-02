@@ -41,7 +41,7 @@ export async function updateProfileAction(
       region_id: profileData.region_id ?? null,
       city: profileData.city ?? null,
       phone: profileData.phone ?? null,
-      show_phone: profileData.show_phone ?? true,
+      ...(profileData.show_phone !== undefined && { show_phone: profileData.show_phone }),
       avatar_url: profileData.avatar_url ?? null,
       updated_at: new Date().toISOString(),
     })

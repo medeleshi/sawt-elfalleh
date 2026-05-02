@@ -141,6 +141,7 @@ export async function middleware(request: NextRequest) {
   // 6. Rule E: Suspended User Restrictions
   if (isSuspended) {
     if (pathname === '/banned') return supabaseResponse
+    if (pathname.startsWith('/notifications')) return supabaseResponse
     
     // Explicitly block core content for banned users
     if (

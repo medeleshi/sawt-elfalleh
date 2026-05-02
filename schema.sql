@@ -15,6 +15,7 @@ create extension if not exists "pg_trgm"; -- للبحث النصي السريع
 -- ENUMS
 -- ─────────────────────────────────────────
 create type user_role as enum ('farmer', 'trader', 'citizen', 'admin');
+create type user_status as enum ('active', 'suspended');
 create type post_type as enum ('sell', 'buy');
 create type post_status as enum ('active', 'expired', 'deleted', 'suspended');
 create type report_status as enum ('pending', 'reviewed', 'dismissed');
@@ -68,6 +69,7 @@ create table profiles (
   username              text unique,
   avatar_url            text,
   role                  user_role not null default 'citizen',
+  status                user_status not null default 'active',
   phone                 text,
   bio                   text check (char_length(bio) <= 300),
   region_id             uuid references regions(id) on delete set null,

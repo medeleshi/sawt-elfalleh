@@ -36,6 +36,8 @@ const PUBLIC_PREFIXES = [
   '/offline',
   // Marketplace is public per spec (section 23.1)
   '/marketplace',
+  // Banned page is a public placeholder for suspended users
+  '/banned',
 ]
 
 /** Auth pages — public but redirect away when already logged in */
@@ -146,11 +148,25 @@ export async function middleware(request: NextRequest) {
   // ── User is authenticated — fetch minimal profile data ────────────────────
   const { data: profile } = await (supabase
     .from('profiles')
-    .select('role, is_profile_completed')
+    .select('role, is_profile_completed, status')
     .eq('id', user.id)
     .single() as any)
 
   const isComplete = profile?.is_profile_completed === true
+  const isSuspended = profile?.status === 'suspended'
+
+  // ── Rule E: Suspended User Restrictions ───────────────────────────────────
+  if (isSuspended) {
+    if (pathname === '/banned') return supabaseResponse
+    if (isPublicRoute(pathname)) return supabaseResponse
+    // Block all protected routes and auth routes, force them to /banned
+    const response = NextResponse.redirect(new URL('/banned', request.url))
+    supabaseResponse.cookies.getAll().forEach((c) => {
+      const { name, value, ...options } = c
+      response.cookies.set(name, value, options as any)
+    })
+    return response
+  }
 
   // ── Rule D: Logged-in + complete profile on auth pages → home ────────────
   if (isAuthRoute(pathname) && isComplete) {

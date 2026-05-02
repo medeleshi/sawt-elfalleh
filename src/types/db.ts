@@ -6,6 +6,7 @@
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 export type UserRole = 'farmer' | 'trader' | 'citizen' | 'admin'
+export type UserStatus = 'active' | 'suspended'
 export type PostType = 'sell' | 'buy'
 export type PostStatus = 'active' | 'expired' | 'deleted' | 'suspended'
 export type ReportStatus = 'pending' | 'reviewed' | 'dismissed'
@@ -51,6 +52,7 @@ export interface PublicRowTypes {
           username: string | null
           avatar_url: string | null
           role: UserRole
+          status: UserStatus
           phone: string | null
           bio: string | null
           region_id: string | null

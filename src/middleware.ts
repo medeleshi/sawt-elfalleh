@@ -146,38 +146,22 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── User is authenticated — fetch minimal profile data ────────────────────
-  // We fetch status separately or handle failure to ensure missing column doesn't break login
-  const { data: profile, error: profileError } = await (supabase
+  // We use the service role here to ensure the middleware can ALWAYS read the profile
+  // regardless of RLS, as this is a critical security/routing check.
+  const serviceRoleSupabase = createServerClient<Database>(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    { cookies: {} }
+  )
+
+  const { data: profile } = await (serviceRoleSupabase
     .from('profiles')
     .select('role, is_profile_completed, status')
     .eq('id', user.id)
     .single() as any)
 
-  let safeProfile = profile
-  
-  // If the query failed (likely due to missing 'status' column), try fetching without it
-  if (!profile || profileError) {
-    const { data: retryData } = await (supabase
-      .from('profiles')
-      .select('role, is_profile_completed')
-      .eq('id', user.id)
-      .single() as any)
-    if (retryData) {
-      safeProfile = retryData
-    }
-  }
-
-  const isComplete = safeProfile?.is_profile_completed === true
-  const isSuspended = safeProfile?.status === 'suspended'
-
-  // DEBUG LOGS - Temporary
-  console.log('--- Middleware Debug ---')
-  console.log('Path:', pathname)
-  console.log('User ID:', user?.id)
-  console.log('Profile Found:', !!safeProfile)
-  console.log('Is Complete:', isComplete)
-  console.log('Profile Data:', JSON.stringify(safeProfile))
-  console.log('--- End Debug ---')
+  const isComplete = profile?.is_profile_completed === true
+  const isSuspended = profile?.status === 'suspended'
 
   // ── Rule E: Suspended User Restrictions ───────────────────────────────────
   if (isSuspended) {
@@ -210,7 +194,7 @@ export async function middleware(request: NextRequest) {
     // Let them progress through onboarding
     if (isOnboardingRoute) return supabaseResponse
     // Admins are exempt — they may never complete the user onboarding flow
-    if (safeProfile?.role === 'admin') return supabaseResponse
+    if (profile?.role === 'admin') return supabaseResponse
     // Block everything else and send to onboarding
     const response = NextResponse.redirect(
       new URL(ROUTES.ONBOARDING_PROFILE, request.url)

@@ -14,7 +14,7 @@ interface User {
   phone: string | null
   city: string | null
   created_at: string
-  deleted_at: string | null
+  status: 'active' | 'suspended'
   regions: { name_ar: string } | null
 }
 
@@ -46,7 +46,7 @@ export default function AdminUsersTable({ users: initialUsers }: Props) {
         setUsers((prev) =>
           prev.map((u) =>
             u.id === userId
-              ? { ...u, deleted_at: banned ? new Date().toISOString() : null }
+              ? { ...u, status: banned ? 'suspended' : 'active' }
               : u
           )
         )
@@ -81,7 +81,7 @@ export default function AdminUsersTable({ users: initialUsers }: Props) {
           <tbody className="divide-y divide-stone-100">
             {users.map((user) => {
               const isLoading = isPending && actionId === user.id
-              const isBanned = !!user.deleted_at
+              const isBanned = user.status === 'suspended'
 
               return (
                 <tr

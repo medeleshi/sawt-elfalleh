@@ -227,9 +227,8 @@ export async function deleteRegionAction(id: string): Promise<ActionResult> {
 // ─── User Admin Actions ───────────────────────────────────────────────────────
 
 /**
- * Permanently bans a user by setting deleted_at.
- * This is a hard ban — use restoreUserAction to reverse it.
- * Previously misnamed suspendUserAction; renamed for clarity.
+ * Suspends a user by setting status = 'suspended'.
+ * The user will be redirected to the /banned page if they try to access protected routes.
  */
 export async function banUserAction(userId: string): Promise<ActionResult> {
   const { supabase, adminId } = await getAdminClient()
@@ -237,7 +236,7 @@ export async function banUserAction(userId: string): Promise<ActionResult> {
 
   const { error } = await supabase
     .from('profiles')
-    .update({ deleted_at: new Date().toISOString() })
+    .update({ status: 'suspended' })
     .eq('id', userId)
 
   if (error) return { success: false, error: error.message }
@@ -257,7 +256,7 @@ export async function restoreUserAction(userId: string): Promise<ActionResult> {
 
   const { error } = await supabase
     .from('profiles')
-    .update({ deleted_at: null })
+    .update({ status: 'active' })
     .eq('id', userId)
 
   if (error) return { success: false, error: error.message }

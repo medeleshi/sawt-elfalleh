@@ -146,14 +146,25 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── User is authenticated — fetch minimal profile data ────────────────────
-  const { data: profile } = await (supabase
+  const { data: profile, error: profileError } = await (supabase
     .from('profiles')
     .select('role, is_profile_completed, status')
     .eq('id', user.id)
     .single() as any)
 
-  const isComplete = profile?.is_profile_completed === true
-  const isSuspended = profile?.status === 'suspended'
+  // Fallback: if 'status' column doesn't exist yet, fetch basic data to prevent redirect loops
+  let safeProfile = profile
+  if (profileError && profileError.message?.includes('status')) {
+    const { data: fallback } = await (supabase
+      .from('profiles')
+      .select('role, is_profile_completed')
+      .eq('id', user.id)
+      .single() as any)
+    safeProfile = fallback
+  }
+
+  const isComplete = safeProfile?.is_profile_completed === true
+  const isSuspended = safeProfile?.status === 'suspended'
 
   // ── Rule E: Suspended User Restrictions ───────────────────────────────────
   if (isSuspended) {
@@ -186,7 +197,7 @@ export async function middleware(request: NextRequest) {
     // Let them progress through onboarding
     if (isOnboardingRoute) return supabaseResponse
     // Admins are exempt — they may never complete the user onboarding flow
-    if (profile?.role === 'admin') return supabaseResponse
+    if (safeProfile?.role === 'admin') return supabaseResponse
     // Block everything else and send to onboarding
     const response = NextResponse.redirect(
       new URL(ROUTES.ONBOARDING_PROFILE, request.url)

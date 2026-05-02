@@ -170,6 +170,15 @@ export async function middleware(request: NextRequest) {
   const isComplete = safeProfile?.is_profile_completed === true
   const isSuspended = safeProfile?.status === 'suspended'
 
+  // DEBUG LOGS - Temporary
+  console.log('--- Middleware Debug ---')
+  console.log('Path:', pathname)
+  console.log('User ID:', user?.id)
+  console.log('Profile Found:', !!safeProfile)
+  console.log('Is Complete:', isComplete)
+  console.log('Profile Data:', JSON.stringify(safeProfile))
+  console.log('--- End Debug ---')
+
   // ── Rule E: Suspended User Restrictions ───────────────────────────────────
   if (isSuspended) {
     if (pathname === '/banned') return supabaseResponse

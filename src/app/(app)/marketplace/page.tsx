@@ -8,6 +8,7 @@ import { getMarketplacePosts, getMarketplaceCatalog } from '@/lib/queries/market
 import type { MarketplaceFilters as MarketplaceFiltersType } from '@/types/marketplace';
 
 import PostCard from '@/components/posts/PostCard';
+import PostGrid from '@/components/posts/PostGrid';
 import MarketplaceFilters from '@/components/posts/MarketplaceFilters';
 import MarketplaceSearchBar from '@/components/posts/MarketplaceSearchBar';
 import MobileFiltersToggle from '@/components/posts/MobileFiltersToggle';
@@ -179,11 +180,10 @@ export default async function MarketplacePage({ searchParams }: PageProps) {
             />
           ) : (
             <>
-              <div className="posts-grid">
-                {posts.map((post) => (
-                  <PostCard key={post.id} post={post} />
-                ))}
-              </div>
+              <PostGrid 
+                posts={posts} 
+                className="posts-grid"
+              />
 
               {/* ── Pagination ── */}
               <Suspense>

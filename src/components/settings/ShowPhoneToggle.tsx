@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import { updateProfileAction } from '@/actions/profile.actions'
+import { togglePhoneVisibilityAction } from '@/actions/profile.actions'
+import { Loader2 } from 'lucide-react'
 
 interface Props {
   initialValue: boolean
@@ -18,12 +19,7 @@ export default function ShowPhoneToggle({ initialValue }: Props) {
     setError(null)
 
     startTransition(async () => {
-      // We need at least full_name to pass validation — we pass a minimal update
-      // In real usage, this would call a dedicated action for show_phone only
-      const result = await updateProfileAction({
-        full_name: '', // placeholder — actual implementation would have a dedicated action
-        show_phone: newValue,
-      } as Parameters<typeof updateProfileAction>[0])
+      const result = await togglePhoneVisibilityAction(newValue)
 
       if (!result.success) {
         setShowPhone(!newValue) // revert
@@ -53,10 +49,14 @@ export default function ShowPhoneToggle({ initialValue }: Props) {
         } ${isPending ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
       >
         <span
-          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
-            showPhone ? 'translate-x-1' : 'translate-x-6'
+          className={`relative inline-block h-4 w-4 transform rounded-full bg-white shadow-sm transition-transform ${
+            showPhone ? (document.dir === 'rtl' ? '-translate-x-6' : 'translate-x-6') : 'translate-x-1'
           }`}
-        />
+        >
+          {isPending && (
+            <Loader2 className="w-2 h-2 text-stone-400 animate-spin absolute inset-0 m-auto" />
+          )}
+        </span>
       </button>
     </div>
   )

@@ -67,12 +67,13 @@ export default async function EditProfilePage() {
 
         <EditProfileForm
           profile={{
-            full_name: profile.full_name,
+            full_name: profile.full_name || '',
             bio: profile.bio ?? '',
             phone: profile.phone ?? '',
             city: profile.city ?? '',
             region_id: profile.region_id ?? '',
             avatar_url: profile.avatar_url ?? '',
+            show_phone: profile.show_phone ?? true,
           }}
           activityIds={activityIds}
           followedRegionIds={followedRegionIds}

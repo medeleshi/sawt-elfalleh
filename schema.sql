@@ -505,6 +505,18 @@ create policy "notifications_own"
   with check (auth.uid() = user_id);
 
 -- ── Admin-only policies ──
+create policy "admin_full_access_profiles"
+  on profiles for all
+  using (
+    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+  );
+
+create policy "admin_full_access_user_activities"
+  on user_activities for all
+  using (
+    exists (select 1 from profiles where id = auth.uid() and role = 'admin')
+  );
+
 create policy "admin_full_access_posts"
   on posts for all
   using (

@@ -49,6 +49,22 @@ export default async function Navbar() {
           </span>
         </Link>
 
+        {/* ── Desktop Nav Links ────────────────────────────────── */}
+        <nav className="hidden sm:flex items-center gap-6 mr-4">
+          <Link
+            href={ROUTES.MARKETPLACE}
+            className="text-sm font-semibold text-stone-600 hover:text-brand-700 transition-colors"
+          >
+            السوق
+          </Link>
+          <Link
+            href={ROUTES.POST_NEW}
+            className="text-sm font-semibold text-stone-600 hover:text-brand-700 transition-colors"
+          >
+            أضف إعلان
+          </Link>
+        </nav>
+
         {/* ── Search (Client Component) ─────────────────────────── */}
         <NavbarSearch />
 
@@ -57,7 +73,7 @@ export default async function Navbar() {
           {/* Notifications */}
           <Link
             href={ROUTES.NOTIFICATIONS}
-            className="relative flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            className="relative hidden sm:flex h-10 w-10 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
             aria-label="الإشعارات"
           >
             <Bell className="h-5 w-5" />

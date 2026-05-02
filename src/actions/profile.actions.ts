@@ -9,6 +9,7 @@ import {
   UpdateNotificationSettingsInput,
 } from '@/lib/validators/profile.schema'
 import type { ActionResult } from '@/types/domain'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 
 // ─────────────────────────────────────────
 // Update Profile Action
@@ -112,7 +113,13 @@ export async function updateProfileAction(
 export async function togglePhoneVisibilityAction(
   show_phone: boolean
 ): Promise<ActionResult> {
-  const supabase = (await createClient()) as any
+  // Use service role for internal system updates to bypass any RLS lockups
+  const serviceRoleSupabase = createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+
+  const supabase = await createClient() // standard client to get user session
   const {
     data: { user },
   } = await supabase.auth.getUser()
@@ -121,7 +128,7 @@ export async function togglePhoneVisibilityAction(
     return { success: false, error: 'غير مصرح لك بهذا الإجراء' }
   }
 
-  const { error } = await supabase
+  const { error } = await serviceRoleSupabase
     .from('profiles')
     .update({
       show_phone,

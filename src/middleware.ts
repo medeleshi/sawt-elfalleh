@@ -157,8 +157,15 @@ export async function middleware(request: NextRequest) {
   }
 
   // 7. Rule D: Logged-in + complete profile on auth pages → home
+  // Exception: Allow password reset routes so users can change password while logged in
   if (isAuthRoute(pathname) && isComplete) {
-    return NextResponse.redirect(new URL(ROUTES.HOME, request.url))
+    const isResetRoute = pathname === ROUTES.FORGOT_PASSWORD || 
+                        pathname === ROUTES.RESET_PASSWORD || 
+                        pathname === ROUTES.RESET_SUCCESS
+    
+    if (!isResetRoute) {
+      return NextResponse.redirect(new URL(ROUTES.HOME, request.url))
+    }
   }
 
   // 8. Rule B: Onboarding incomplete

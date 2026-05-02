@@ -1,10 +1,10 @@
 import { cn } from '@/lib/utils/cn'
 import PostCard from '@/components/posts/PostCard'
 import EmptyState from '@/components/shared/EmptyState'
-import type { PostWithDetails } from '@/types/domain'
+import type { PostCard as PostCardType } from '@/types/marketplace'
 
 interface PostGridProps {
-  posts: PostWithDetails[]
+  posts: PostCardType[]
   emptyTitle?: string
   emptyDescription?: string
   className?: string

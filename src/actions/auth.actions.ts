@@ -163,6 +163,40 @@ export async function resetPasswordAction(
   redirect(ROUTES.RESET_SUCCESS)
 }
 
+// ─── Change Password (Authenticated) ──────────────────────────────────────────
+
+export async function changePasswordAction(
+  _prevState: ActionResult,
+  formData: FormData
+): Promise<ActionResult> {
+  const raw = {
+    password:        formData.get('password'),
+    confirmPassword: formData.get('confirmPassword'),
+  }
+
+  const parsed = resetPasswordSchema.safeParse(raw)
+  if (!parsed.success) {
+    return { success: false, error: parsed.error.errors[0].message }
+  }
+
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  if (!user) {
+    return { success: false, error: 'غير مصرح لك بهذا الإجراء' }
+  }
+
+  const { error } = await supabase.auth.updateUser({
+    password: parsed.data.password,
+  })
+
+  if (error) {
+    return { success: false, error: mapAuthError(error.message) }
+  }
+
+  return { success: true }
+}
+
 // ─── Logout ───────────────────────────────────────────────────────────────────
 
 export async function logoutAction(): Promise<void> {

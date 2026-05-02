@@ -8,6 +8,7 @@ import {
 import NotificationSettingsForm from '@/components/settings/NotificationSettingsForm'
 import ShowPhoneToggle from '@/components/settings/ShowPhoneToggle'
 import UsernameSettingsForm from '@/components/settings/UsernameSettingsForm'
+import ChangePasswordForm from '@/components/settings/ChangePasswordForm'
 import { ChevronLeft, User, Bell, Lock, Shield, AtSign } from 'lucide-react'
 
 export const metadata = {
@@ -148,12 +149,7 @@ export default async function SettingsPage() {
                   <p className="text-xs text-stone-400">تغيير كلمة المرور</p>
                 </div>
               </div>
-              <Link
-                href="/forgot-password"
-                className="text-xs text-green-600 hover:underline font-semibold"
-              >
-                تغيير
-              </Link>
+              <ChangePasswordForm />
             </div>
           </div>
         </section>

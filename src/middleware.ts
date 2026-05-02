@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from 'next/server'
-import { createServerClient } from '@supabase/ssr'
+import { createClient } from '@supabase/supabase-js'
 import { createMiddlewareClient } from '@/lib/supabase/middleware'
 import { ROUTES } from '@/lib/utils/constants'
 import type { Database } from '@/types/db'
@@ -150,10 +150,9 @@ export async function middleware(request: NextRequest) {
   // ── User is authenticated — fetch minimal profile data ────────────────────
   // We use the service role here to ensure the middleware can ALWAYS read the profile
   // regardless of RLS, as this is a critical security/routing check.
-  const serviceRoleSupabase = createServerClient<Database>(
+  const serviceRoleSupabase = createClient<Database>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { cookies: {} }
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
   )
 
   const { data: profile } = await (serviceRoleSupabase
